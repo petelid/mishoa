@@ -4,86 +4,220 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mishoa.id 🍜</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
 <style>
-body { font-family: 'Inter', sans-serif; background:#fff; }
-.button-wa {
-  background:#25D366; color:white; padding:12px 20px; border-radius:8px;
-  display:inline-block; text-align:center; font-weight:600; text-decoration:none;
-  width:100%;
-}
+body { font-family: 'Inter', sans-serif; }
+input, button { touch-action: manipulation; }
 </style>
 </head>
-<body class="p-4">
 
-<h1 class="text-2xl font-bold mb-4">Order Mishoa.id</h1>
+<body class="bg-black text-white">
 
-<!-- Produk -->
-<div class="mb-4">
-  <label class="block font-semibold mb-1">Ayam Bawang</label>
-  <input type="number" min="0" value="1" id="qtyAyamBawang" class="border p-2 w-full">
-</div>
-<div class="mb-4">
-  <label class="block font-semibold mb-1">Goreng</label>
-  <input type="number" min="0" value="2" id="qtyGoreng" class="border p-2 w-full">
+<!-- NAVBAR -->
+<div class="sticky top-0 z-50 bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center backdrop-blur-sm">
+  <h1 class="font-bold text-lg">🍜 Mishoa.id</h1>
+  <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold hover:scale-105 transition">
+    🛒 <span id="cartCount">0</span>
+  </div>
 </div>
 
-<!-- Nama & Alamat -->
-<div class="mb-4">
-  <label class="block font-semibold mb-1">Nama</label>
-  <input type="text" id="nama" class="border p-2 w-full" placeholder="Masukkan nama">
-</div>
-<div class="mb-4">
-  <label class="block font-semibold mb-1">Alamat</label>
-  <input type="text" id="alamat" class="border p-2 w-full" placeholder="Masukkan alamat">
-</div>
+<!-- HERO -->
+<section class="text-center py-16 px-4 sm:px-6">
+  <h2 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
+    Misoa Premium <br> Cepat & Praktis 🍜
+  </h2>
+  <p class="text-gray-400 max-w-xl mx-auto mb-8">
+    Order langsung via WhatsApp. Tanpa ribet, cepat sampai.
+  </p>
+  <button onclick="scrollToCart()" class="bg-orange-500 px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
+    Pesan Sekarang
+  </button>
+</section>
 
-<!-- Total -->
-<div class="mb-4 p-4 border rounded bg-gray-50">
-  <p>Subtotal: Rp <span id="subtotal">0</span></p>
-  <p>Ongkir: Rp <span id="ongkir">0</span></p>
-  <p class="font-bold">Total Bayar: Rp <span id="totalBayar">0</span></p>
-</div>
+<!-- PRODUK -->
+<div id="productList" class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 sm:px-6 pb-16"></div>
 
-<!-- Tombol WA -->
-<a href="#" id="btnWA" class="button-wa mt-2">Checkout via WhatsApp</a>
+<!-- CART -->
+<div id="cartSection" class="max-w-xl mx-auto bg-white/20 border border-white/20 p-6 rounded-2xl mb-20">
+  <h2 class="text-xl font-bold mb-4">🛒 Keranjang</h2>
+
+  <div id="cart"></div>
+
+  <input id="nama" placeholder="Nama" class="bg-white/30 border border-white/20 p-3 w-full mt-3 rounded-xl text-black" autocomplete="name">
+  <input id="alamat" placeholder="Alamat" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black" autocomplete="street-address">
+
+  <h3 class="mt-4 font-bold text-lg">Total: <span id="total">Rp0</span></h3>
+
+  <button onclick="checkout()" class="bg-green-500 hover:bg-green-600 text-white w-full mt-4 py-3 rounded-xl transition">
+    Checkout via WhatsApp
+  </button>
+</div>
 
 <script>
-function updateTotal() {
-  let qtyAyamBawang = parseInt(document.getElementById('qtyAyamBawang').value) || 0;
-  let qtyGoreng = parseInt(document.getElementById('qtyGoreng').value) || 0;
-  let hargaAyamBawang = 15000;
-  let hargaGoreng = 17000; // total 2x 17000 = 34.000
+let cart = []
 
-  let subtotal = (qtyAyamBawang * hargaAyamBawang) + (qtyGoreng * hargaGoreng);
-  let ongkir = 0; // default ongkir 0
-  let totalBayar = subtotal + ongkir;
+const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
-  // Bonus: selalu +1 Ayam Bawang
-  let bonus = qtyAyamBawang >= 1 ? 1 : 0;
+// =============================
+// DATA PRODUK (placeholder pasti muncul)
+let products = [
+  { nama: "Ayam Bawang", harga: 15000, img: "https://via.placeholder.com/300x200?text=Ayam+Bawang", stock: 5, badge: "BEST SELLER" },
+  { nama: "Laksa", harga: 18000, img: "https://via.placeholder.com/300x200?text=Laksa", stock: 0, badge: "" },
+  { nama: "Goreng", harga: 17000, img: "https://via.placeholder.com/300x200?text=Goreng", stock: 3, badge: "FAVORIT" }
+]
 
-  document.getElementById('subtotal').innerText = subtotal;
-  document.getElementById('ongkir').innerText = ongkir;
-  document.getElementById('totalBayar').innerText = totalBayar;
+// =============================
+// RENDER PRODUK
+function renderProducts(){
+  let html = ""
+  products.forEach(p=>{
+    html += `
+    <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition">
 
-  // Prepare WA message
-  let nama = document.getElementById('nama').value || '-';
-  let alamat = document.getElementById('alamat').value || '-';
-  let message = `*ORDER MISHOA.ID*\nOrder#${Math.floor(Math.random()*1000000)}\n\n*Detail Pesanan:*\n• Ayam Bawang x${qtyAyamBawang} = Rp${qtyAyamBawang*hargaAyamBawang}\n• Goreng x${qtyGoreng} = Rp${qtyGoreng*hargaGoreng}\n\n*Bonus:*\n• Ayam Bawang x${bonus}\n\nSubtotal: Rp${subtotal}\nOngkir: Rp${ongkir}\n*Total Bayar: Rp${totalBayar}*\n\nNama: ${nama}\nAlamat: ${alamat}\n\nTerima kasih kak 🙏`;
-  
-  let waLink = `https://wa.me/6282112007575?text=${encodeURIComponent(message)}`;
-  document.getElementById('btnWA').href = waLink;
+      ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
+
+      <img src="${p.img}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'" class="w-full h-48 object-cover rounded-xl mb-4">
+
+      <h2 class="font-semibold text-lg">${p.nama}</h2>
+      <p class="text-orange-400">${formatRupiah(p.harga)}</p>
+      <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
+
+      ${
+        p.stock > 0
+        ? `<button onclick="addToCart('${p.nama}')" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">
+            + Keranjang
+          </button>`
+        : `<button disabled class="w-full bg-gray-500 py-2 rounded-xl">
+            ❌ Habis
+          </button>`
+      }
+
+    </div>
+    `
+  })
+
+  document.getElementById("productList").innerHTML = html
 }
 
-// Update total saat input berubah
-document.getElementById('qtyAyamBawang').addEventListener('input', updateTotal);
-document.getElementById('qtyGoreng').addEventListener('input', updateTotal);
-document.getElementById('nama').addEventListener('input', updateTotal);
-document.getElementById('alamat').addEventListener('input', updateTotal);
+// =============================
+// CART
+function scrollToCart(){
+  document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
+}
 
-// Initial update
-updateTotal();
+function addToCart(nama){
+  let p = products.find(p => p.nama === nama)
+  let item = cart.find(i => i.nama === nama)
+  if(item){
+    if(item.qty < p.stock) item.qty++
+  } else {
+    cart.push({nama, harga:p.harga, qty:1})
+  }
+  renderCart()
+}
+
+function tambahQty(nama){
+  let item = cart.find(i => i.nama === nama)
+  let p = products.find(p => p.nama === nama)
+  if(item && item.qty < p.stock) item.qty++
+  renderCart()
+}
+
+function kurangQty(nama){
+  let item = cart.find(i => i.nama === nama)
+  if(item){
+    item.qty--
+    if(item.qty <= 0) cart = cart.filter(i => i.nama !== nama)
+  }
+  renderCart()
+}
+
+function renderCart(){
+  let html = ""
+  let total = 0
+  let totalQty = 0
+
+  cart.forEach(item=>{
+    let sub = item.harga * item.qty
+    total += sub
+    totalQty += item.qty
+
+    html += `
+    <div class="flex justify-between items-center border-b border-white/20 py-2">
+      <div>
+        <p class="font-semibold">${item.nama}</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="kurangQty('${item.nama}')" class="px-2 bg-white/20 rounded">-</button>
+          <span>${item.qty}</span>
+          <button onclick="tambahQty('${item.nama}')" class="px-2 bg-white/20 rounded">+</button>
+        </div>
+      </div>
+      <div class="text-right">
+        <p>${formatRupiah(sub)}</p>
+      </div>
+    </div>
+    `
+  })
+
+  let bonus = Math.floor(totalQty / 3)
+  if(bonus > 0){
+    html += `<p class="text-green-400 mt-3">🎁 Bonus Ayam Bawang x${bonus}</p>`
+  }
+
+  document.getElementById('cart').innerHTML = html
+  document.getElementById('total').innerText = formatRupiah(total)
+  document.getElementById('cartCount').innerText = totalQty
+}
+
+// =============================
+// CHECKOUT WA
+function checkout(){
+  if(cart.length === 0){ alert("Keranjang kosong"); return }
+
+  let nama = document.getElementById('nama').value.trim()
+  let alamat = document.getElementById('alamat').value.trim()
+  if(!nama || !alamat){ alert("Isi nama & alamat dulu"); return }
+
+  let orderId = new Date().getTime().toString().slice(-6)
+  let text = `🛒 *ORDER MISHOA.ID*\n📦 Order#${orderId}\n\n🍜 *Detail Pesanan:*\n`
+  let total = 0
+  let totalQty = 0
+
+  cart.forEach(i=>{
+    let sub = i.harga * i.qty
+    text += `• ${i.nama} x${i.qty} = ${formatRupiah(sub)}\n`
+    total += sub
+    totalQty += i.qty
+
+    let p = products.find(p => p.nama === i.nama)
+    if(p){ p.stock -= i.qty; if(p.stock < 0) p.stock = 0 }
+  })
+
+  let bonus = Math.floor(totalQty / 3)
+  if(bonus > 0) text += `\n🎁 *Bonus:*\n• Ayam Bawang x${bonus}\n`
+
+  let ongkir = total >= 50000 ? 0 : 10000
+  let grandTotal = total + ongkir
+
+  text += `\n💰 Subtotal: ${formatRupiah(total)}\n🚚 Ongkir: ${formatRupiah(ongkir)}\n💵 *Total Bayar: ${formatRupiah(grandTotal)}*\n\n👤 Nama: ${nama}\n📍 Alamat: ${alamat}\n\nTerima kasih kak 🙏`
+
+  // Mobile-friendly WA link
+  window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
+
+  cart = []
+  document.getElementById('nama').value = ""
+  document.getElementById('alamat').value = ""
+
+  renderCart()
+  renderProducts()
+}
+
+// =============================
+// INIT
+window.onload = function(){ renderProducts() }
 </script>
 
 </body>
