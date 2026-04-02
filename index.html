@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -6,7 +7,6 @@
   <title>Mishoa.id 🍜</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
   <style>
     body { font-family: 'Inter', sans-serif; }
   </style>
@@ -15,64 +15,45 @@
 <body class="bg-black text-white">
 
 <!-- NAVBAR -->
+
 <div class="sticky top-0 z-50 backdrop-blur bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
   <h1 class="font-bold text-lg">🍜 Mishoa.id</h1>
-  <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold hover:scale-105 transition">
+  <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold">
     🛒 <span id="cartCount">0</span>
   </div>
 </div>
 
 <!-- HERO -->
+
 <section class="text-center py-20 px-6">
-  <h2 class="text-5xl font-bold mb-6 leading-tight">
-    Misoa Premium <br> Cepat & Praktis 🍜
+  <h2 class="text-5xl font-bold mb-6">
+    Misoa Premium 🍜
   </h2>
-  <p class="text-gray-400 max-w-xl mx-auto mb-8">
-    Order langsung via WhatsApp. Tanpa ribet, cepat sampai, rasa konsisten.
+  <p class="text-gray-400 mb-8">
+    Order cepat via WhatsApp
   </p>
-  <button onclick="scrollToCart()" class="bg-orange-500 px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
+  <button onclick="scrollToCart()" class="bg-orange-500 px-6 py-3 rounded-xl font-semibold">
     Pesan Sekarang
   </button>
 </section>
 
-<!-- PRODUK -->
-<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-6 pb-16">
+<!-- PRODUK (DINAMIS) -->
 
-  <div class="bg-white/5 border border-white/10 rounded-2xl p-4 hover:scale-105 transition">
-    <img src="https://images.unsplash.com/photo-1512058564366-c9e3e0468a98?auto=format&fit=crop&w=600&q=80" class="w-full h-48 object-cover rounded-xl mb-4">
-    <h2 class="font-semibold text-lg">Ayam Bawang</h2>
-    <p class="text-orange-400 mb-3">Rp15.000</p>
-    <button onclick="addToCart('Ayam Bawang',15000)" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 transition">+ Keranjang</button>
-  </div>
-
-  <div class="bg-white/5 border border-white/10 rounded-2xl p-4 hover:scale-105 transition">
-    <img src="https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=600&q=80" class="w-full h-48 object-cover rounded-xl mb-4">
-    <h2 class="font-semibold text-lg">Laksa</h2>
-    <p class="text-orange-400 mb-3">Rp18.000</p>
-    <button onclick="addToCart('Laksa',18000)" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 transition">+ Keranjang</button>
-  </div>
-
-  <div class="bg-white/5 border border-white/10 rounded-2xl p-4 hover:scale-105 transition">
-    <img src="https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=600&q=80" class="w-full h-48 object-cover rounded-xl mb-4">
-    <h2 class="font-semibold text-lg">Goreng</h2>
-    <p class="text-orange-400 mb-3">Rp17.000</p>
-    <button onclick="addToCart('Goreng',17000)" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 transition">+ Keranjang</button>
-  </div>
-
-</div>
+<div id="productList" class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-6 pb-16"></div>
 
 <!-- CART -->
-<div id="cartSection" class="max-w-xl mx-auto bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur mb-20">
+
+<div id="cartSection" class="max-w-xl mx-auto bg-white/5 border border-white/10 p-6 rounded-2xl mb-20">
   <h2 class="text-xl font-bold mb-4">🛒 Keranjang</h2>
 
   <div id="cart"></div>
 
-  <input id="nama" placeholder="Nama" class="bg-white/10 border border-white/10 p-3 w-full mt-3 rounded-xl">
-  <input id="alamat" placeholder="Alamat" class="bg-white/10 border border-white/10 p-3 w-full mt-2 rounded-xl">
+  <input id="nama" placeholder="Nama" class="bg-white/10 p-3 w-full mt-3 rounded-xl">
+  <input id="alamat" placeholder="Alamat" class="bg-white/10 p-3 w-full mt-2 rounded-xl">
 
   <h3 class="mt-4 font-bold text-lg">Total: Rp <span id="total">0</span></h3>
 
-  <button onclick="checkout()" class="bg-green-500 hover:bg-green-600 text-white w-full mt-4 py-3 rounded-xl transition">
+  <button onclick="checkout()" class="bg-green-500 w-full mt-4 py-3 rounded-xl">
     Checkout via WhatsApp
   </button>
 </div>
@@ -80,20 +61,99 @@
 <script>
 let cart = []
 
+// =============================
+// DATA PRODUK (EDIT DI SINI)
+// =============================
+const products = [
+  {
+    nama: "Ayam Bawang",
+    harga: 15000,
+    img: "https://images.unsplash.com/photo-1512058564366-c9e3e0468a98?auto=format&fit=crop&w=600&q=80",
+    stock: 5,
+    badge: "BEST SELLER"
+  },
+  {
+    nama: "Laksa",
+    harga: 18000,
+    img: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=600&q=80",
+    stock: 0,
+    badge: ""
+  },
+  {
+    nama: "Goreng",
+    harga: 17000,
+    img: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=600&q=80",
+    stock: 3,
+    badge: "FAVORIT"
+  }
+]
+
+// =============================
+// RENDER PRODUK
+// =============================
+function renderProducts(){
+  let html = ""
+
+  products.forEach(p=>{
+    html += `
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-4 relative">
+
+      ${p.badge ? `<span class="absolute top-2 left-2 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
+
+      <img src="${p.img}" class="w-full h-48 object-cover rounded-xl mb-4">
+
+      <h2 class="font-semibold text-lg">${p.nama}</h2>
+      <p class="text-orange-400">Rp${p.harga}</p>
+      <p class="text-gray-400 text-sm mb-2">Stok: ${p.stock}</p>
+
+      ${
+        p.stock > 0
+        ? `<button onclick="addToCart('${p.nama}',${p.harga})"
+            class="w-full bg-orange-500 py-2 rounded-xl">
+            + Keranjang
+          </button>`
+        : `<button disabled class="w-full bg-gray-500 py-2 rounded-xl">
+            ❌ Habis
+          </button>`
+      }
+
+    </div>
+    `
+  })
+
+  document.getElementById("productList").innerHTML = html
+}
+
+// =============================
+// CART FUNCTION
+// =============================
 function scrollToCart(){
   document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
 }
 
 function addToCart(nama, harga){
+  let p = products.find(p => p.nama === nama)
   let item = cart.find(i => i.nama === nama)
-  if(item){ item.qty++ }
-  else { cart.push({nama, harga, qty:1}) }
+
+  if(item){
+    if(item.qty < p.stock){
+      item.qty++
+    }
+  } else {
+    cart.push({nama, harga, qty:1})
+  }
+
   renderCart()
 }
 
 function tambahQty(nama){
   let item = cart.find(i => i.nama === nama)
-  if(item){ item.qty++ }
+  let p = products.find(p => p.nama === nama)
+
+  if(item && item.qty < p.stock){
+    item.qty++
+  }
+
   renderCart()
 }
 
@@ -145,35 +205,35 @@ function renderCart(){
   document.getElementById('cartCount').innerText = totalQty
 }
 
+// =============================
+// CHECKOUT (STOK BERKURANG)
+// =============================
 function checkout(){
-  let orderId = new Date().getTime().toString().slice(-6)
-
-  let text = "Halo kak, saya mau order:\nOrder#" + orderId + "\n\n"
-
+  let text = "Halo kak, saya mau order:\n\n"
   let total = 0
-  let totalQty = 0
 
   cart.forEach(i=>{
-    text += "- " + i.nama + " x" + i.qty + " - Rp" + (i.harga*i.qty) + "\n"
+    text += "- " + i.nama + " x" + i.qty + "\n"
     total += i.harga*i.qty
-    totalQty += i.qty
+
+    let p = products.find(p => p.nama === i.nama)
+    if(p){
+      p.stock -= i.qty
+      if(p.stock < 0) p.stock = 0
+    }
   })
 
-  let bonus = Math.floor(totalQty / 3)
-  if(bonus > 0){
-    text += "\nBonus Ayam Bawang x" + bonus
-  }
-
-  text += "\n\nTotal: Rp" + total
-
-  let nama = document.getElementById('nama').value
-  let alamat = document.getElementById('alamat').value
-
-  text += "\nNama: " + nama
-  text += "\nAlamat: " + alamat
+  text += "\nTotal: Rp" + total
 
   window.open("https://wa.me/6282112007575?text=" + encodeURIComponent(text))
+
+  cart = []
+  renderCart()
+  renderProducts()
 }
+
+// INIT
+renderProducts()
 </script>
 
 </body>
