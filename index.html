@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mishoa.id 🍜</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mishoa.id 🍜</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body { font-family: 'Inter', sans-serif; }
+</style>
 </head>
 
 <body class="bg-black text-white">
 
 <!-- NAVBAR -->
-
 <div class="sticky top-0 z-50 backdrop-blur bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
   <h1 class="font-bold text-lg">🍜 Mishoa.id</h1>
   <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold hover:scale-105 transition">
@@ -24,7 +24,6 @@
 </div>
 
 <!-- HERO -->
-
 <section class="text-center py-20 px-6">
   <h2 class="text-5xl font-bold mb-6 leading-tight">
     Misoa Premium <br> Cepat & Praktis 🍜
@@ -38,11 +37,9 @@
 </section>
 
 <!-- PRODUK -->
-
 <div id="productList" class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-6 pb-16"></div>
 
 <!-- CART -->
-
 <div id="cartSection" class="max-w-xl mx-auto bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur mb-20">
   <h2 class="text-xl font-bold mb-4">🛒 Keranjang</h2>
 
@@ -51,7 +48,7 @@
   <input id="nama" placeholder="Nama" class="bg-white/10 border border-white/10 p-3 w-full mt-3 rounded-xl">
   <input id="alamat" placeholder="Alamat" class="bg-white/10 border border-white/10 p-3 w-full mt-2 rounded-xl">
 
-  <h3 class="mt-4 font-bold text-lg">Total: Rp <span id="total">0</span></h3>
+  <h3 class="mt-4 font-bold text-lg">Total: <span id="total">Rp0</span></h3>
 
   <button onclick="checkout()" class="bg-green-500 hover:bg-green-600 text-white w-full mt-4 py-3 rounded-xl transition">
     Checkout via WhatsApp
@@ -61,36 +58,18 @@
 <script>
 let cart = []
 
-// =============================
-// DATA PRODUK (EDIT DI SINI)
-// =============================
+const formatRupiah = (n) => {
+  return "Rp" + n.toLocaleString("id-ID")
+}
+
+// DATA PRODUK
 const products = [
-  {
-    nama: "Ayam Bawang",
-    harga: 15000,
-    img: "https://images.unsplash.com/photo-1512058564366-c9e3e0468a98",
-    stock: 5,
-    badge: "BEST SELLER"
-  },
-  {
-    nama: "Laksa",
-    harga: 18000,
-    img: "https://images.unsplash.com/photo-1553621042-f6e147245754",
-    stock: 0,
-    badge: ""
-  },
-  {
-    nama: "Goreng",
-    harga: 17000,
-    img: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841",
-    stock: 3,
-    badge: "FAVORIT"
-  }
+  { nama: "Ayam Bawang", harga: 15000, img: "https://images.unsplash.com/photo-1512058564366-c9e3e0468a98", stock: 5, badge: "BEST SELLER" },
+  { nama: "Laksa", harga: 18000, img: "https://images.unsplash.com/photo-1553621042-f6e147245754", stock: 0, badge: "" },
+  { nama: "Goreng", harga: 17000, img: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841", stock: 3, badge: "FAVORIT" }
 ]
 
-// =============================
 // RENDER PRODUK
-// =============================
 function renderProducts(){
   let html = ""
 
@@ -103,13 +82,13 @@ function renderProducts(){
       <img src="${p.img}" class="w-full h-48 object-cover rounded-xl mb-4">
 
       <h2 class="font-semibold text-lg">${p.nama}</h2>
-      <p class="text-orange-400">Rp${p.harga}</p>
+      <p class="text-orange-400">${formatRupiah(p.harga)}</p>
       <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
 
       ${
         p.stock > 0
-        ? `<button onclick="addToCart('${p.nama}',${p.harga})"
-            class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600">
+        ? `<button onclick="addToCart('${p.nama}')"
+            class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">
             + Keranjang
           </button>`
         : `<button disabled
@@ -125,24 +104,21 @@ function renderProducts(){
   document.getElementById("productList").innerHTML = html
 }
 
-// =============================
 // CART FUNCTION
-// =============================
 function scrollToCart(){
   document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
 }
 
-function addToCart(nama, harga){
+function addToCart(nama){
   let p = products.find(p => p.nama === nama)
-
-  // 🔥 BATAS STOK
   let item = cart.find(i => i.nama === nama)
+
   if(item){
     if(item.qty < p.stock){
       item.qty++
     }
   } else {
-    cart.push({nama, harga, qty:1})
+    cart.push({nama, harga:p.harga, qty:1})
   }
 
   renderCart()
@@ -191,7 +167,7 @@ function renderCart(){
         </div>
       </div>
       <div class="text-right">
-        <p>Rp${sub}</p>
+        <p>${formatRupiah(sub)}</p>
       </div>
     </div>
     `
@@ -203,22 +179,33 @@ function renderCart(){
   }
 
   document.getElementById('cart').innerHTML = html
-  document.getElementById('total').innerText = total
+  document.getElementById('total').innerText = formatRupiah(total)
   document.getElementById('cartCount').innerText = totalQty
 }
 
 function checkout(){
-  let orderId = new Date().getTime().toString().slice(-6)
+  if(cart.length === 0){
+    alert("Keranjang kosong")
+    return
+  }
 
-  let text = "Halo kak, saya mau order:\\nOrder#" + orderId + "\\n\\n"
+  let nama = document.getElementById('nama').value.trim()
+  let alamat = document.getElementById('alamat').value.trim()
+
+  if(!nama || !alamat){
+    alert("Isi nama & alamat dulu")
+    return
+  }
+
+  let orderId = new Date().getTime().toString().slice(-6)
+  let text = "Halo kak, saya mau order:%0AOrder#" + orderId + "%0A%0A"
 
   let total = 0
 
   cart.forEach(i=>{
-    text += "- " + i.nama + " x" + i.qty + " - Rp" + (i.harga*i.qty) + "\\n"
+    text += `- ${i.nama} x${i.qty} - ${formatRupiah(i.harga*i.qty)}%0A`
     total += i.harga*i.qty
 
-    // 🔥 KURANGI STOK
     let p = products.find(p => p.nama === i.nama)
     if(p){
       p.stock -= i.qty
@@ -226,17 +213,16 @@ function checkout(){
     }
   })
 
-  text += "\\nTotal: Rp" + total
+  text += `%0ATotal: ${formatRupiah(total)}`
+  text += `%0ANama: ${nama}`
+  text += `%0AAlamat: ${alamat}`
 
-  let nama = document.getElementById('nama').value
-  let alamat = document.getElementById('alamat').value
-
-  text += "\\nNama: " + nama
-  text += "\\nAlamat: " + alamat
-
-  window.open("https://wa.me/6282112007575?text=" + encodeURIComponent(text))
+  window.open("https://wa.me/6282112007575?text=" + text)
 
   cart = []
+  document.getElementById('nama').value = ""
+  document.getElementById('alamat').value = ""
+
   renderCart()
   renderProducts()
 }
