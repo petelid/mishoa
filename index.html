@@ -72,7 +72,7 @@ function updateTotal() {
   let alamat = document.getElementById('alamat').value || '-';
   let message = `*ORDER MISHOA.ID*\nOrder#${Math.floor(Math.random()*1000000)}\n\n*Detail Pesanan:*\n• Ayam Bawang x${qtyAyamBawang} = Rp${qtyAyamBawang*hargaAyamBawang}\n• Goreng x${qtyGoreng} = Rp${qtyGoreng*hargaGoreng}\n\n*Bonus:*\n• Ayam Bawang x${bonus}\n\nSubtotal: Rp${subtotal}\nOngkir: Rp${ongkir}\n*Total Bayar: Rp${totalBayar}*\n\nNama: ${nama}\nAlamat: ${alamat}\n\nTerima kasih kak 🙏`;
   
-  let waLink = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`;
+  let waLink = `https://wa.me/6282112007575?text=${encodeURIComponent(message)}`;
   document.getElementById('btnWA').href = waLink;
 }
 
