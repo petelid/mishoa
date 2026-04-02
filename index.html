@@ -198,14 +198,24 @@ function checkout(){
   }
 
   let orderId = new Date().getTime().toString().slice(-6)
-  let text = "Halo kak, saya mau order:%0AOrder#" + orderId + "%0A%0A"
+
+  let text = `🛒 *ORDER MISHOA.ID*
+📦 Order#${orderId}
+
+🍜 *Detail Pesanan:*
+`
 
   let total = 0
+  let totalQty = 0
 
   cart.forEach(i=>{
-    text += `- ${i.nama} x${i.qty} - ${formatRupiah(i.harga*i.qty)}%0A`
-    total += i.harga*i.qty
+    let sub = i.harga * i.qty
+    text += `• ${i.nama} x${i.qty} = Rp${sub.toLocaleString("id-ID")}
+`
+    total += sub
+    totalQty += i.qty
 
+    // kurangi stok
     let p = products.find(p => p.nama === i.nama)
     if(p){
       p.stock -= i.qty
@@ -213,11 +223,36 @@ function checkout(){
     }
   })
 
-  text += `%0ATotal: ${formatRupiah(total)}`
-  text += `%0ANama: ${nama}`
-  text += `%0AAlamat: ${alamat}`
+  // 🎁 BONUS
+  let bonus = Math.floor(totalQty / 3)
+  if(bonus > 0){
+    text += `\n🎁 *Bonus:*\n• Ayam Bawang x${bonus}\n`
+  }
 
-  window.open("https://wa.me/6282112007575?text=" + text)
+  // 🚚 ONGKIR (LOGIC SIMPLE)
+  let ongkir = 10000
+
+  // contoh upgrade dikit:
+  if(total >= 50000){
+    ongkir = 0 // gratis ongkir kalau > 50rb
+  }
+
+  let grandTotal = total + ongkir
+
+  text += `
+💰 Subtotal: Rp${total.toLocaleString("id-ID")}
+🚚 Ongkir: Rp${ongkir.toLocaleString("id-ID")}
+💵 *Total Bayar: Rp${grandTotal.toLocaleString("id-ID")}*
+
+👤 Nama: ${nama}
+📍 Alamat: ${alamat}
+
+Terima kasih kak 🙏
+`
+
+  let url = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
+
+  window.open(url)
 
   cart = []
   document.getElementById('nama').value = ""
@@ -225,11 +260,7 @@ function checkout(){
 
   renderCart()
   renderProducts()
-}
-
-// INIT
-renderProducts()
-</script>
+}</script>
 
 </body>
 </html>
