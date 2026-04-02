@@ -211,8 +211,9 @@ function checkout(){
   let bonus = Math.floor(totalQty / 3)
   if(bonus > 0) text += `\n🎁 *Bonus:*\n• Ayam Bawang x${bonus}\n`
 
-  let ongkir = total >= 50000 ? 0 : 10000
-  let grandTotal = total + ongkir
+  let ongkir = 0; // sementara ongkir 0
+  let subtotal = totalBarang;
+  let totalBayar = subtotal + ongkir;
 
   text += `\n💰 Subtotal: ${formatRupiah(total)}\n🚚 Ongkir: ${formatRupiah(ongkir)}\n💵 *Total Bayar: ${formatRupiah(grandTotal)}*\n\n👤 Nama: ${nama}\n📍 Alamat: ${alamat}\n\nTerima kasih kak 🙏`
 
