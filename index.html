@@ -6,52 +6,43 @@
 <title>Mishoa.id 🍜</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
-body { font-family: 'Inter', sans-serif; }
+body { font-family: Arial, sans-serif; }
 </style>
 </head>
 
 <body class="bg-black text-white">
 
 <!-- NAVBAR -->
-<div class="sticky top-0 z-50 backdrop-blur bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
-  <h1 class="font-bold text-lg">🍜 Mishoa.id</h1>
-  <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl">
+<div class="p-4 flex justify-between bg-white/10">
+  <h1>🍜 Mishoa.id</h1>
+  <div onclick="scrollToCart()" class="cursor-pointer">
     🛒 <span id="cartCount">0</span>
   </div>
 </div>
 
 <!-- HERO -->
-<section class="text-center py-20 px-6">
-  <h2 class="text-4xl font-bold mb-4">
-    Misoa Premium Cepat & Praktis 🍜
-  </h2>
-  <p class="text-gray-400 mb-6">
-    Order via WhatsApp. Simple & cepat.
-  </p>
-  <button onclick="scrollToCart()" class="bg-orange-500 px-6 py-3 rounded-xl">
-    Pesan Sekarang
-  </button>
-</section>
+<div class="text-center p-10">
+  <h2 class="text-2xl mb-3">Misoa Cepat & Praktis</h2>
+  <button onclick="scrollToCart()" class="bg-orange-500 px-4 py-2 rounded">Pesan</button>
+</div>
 
 <!-- PRODUK -->
-<div id="productList" class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 px-6 pb-16"></div>
+<div id="productList" class="grid md:grid-cols-3 gap-4 p-4"></div>
 
 <!-- CART -->
-<div id="cartSection" class="max-w-xl mx-auto bg-white/5 p-6 rounded-2xl mb-20">
-  <h2 class="text-lg font-bold mb-3">🛒 Keranjang</h2>
-
+<div id="cartSection" class="p-4">
+  <h2>Keranjang</h2>
   <div id="cart"></div>
 
-  <input id="nama" placeholder="Nama" class="bg-white/10 p-2 w-full mt-3 rounded">
-  <input id="alamat" placeholder="Alamat" class="bg-white/10 p-2 w-full mt-2 rounded">
+  <input id="nama" placeholder="Nama" class="w-full mt-2 p-2 text-black">
+  <input id="alamat" placeholder="Alamat" class="w-full mt-2 p-2 text-black">
 
-  <h3 class="mt-3 font-bold">Total: <span id="total">Rp0</span></h3>
+  <p class="mt-2">Total: <span id="total">Rp0</span></p>
 
-  <button onclick="checkout()" class="bg-green-500 w-full mt-3 py-2 rounded">
-    Checkout WhatsApp
+  <button onclick="checkout()" class="bg-green-500 w-full mt-3 p-2">
+    Checkout
   </button>
 </div>
 
@@ -72,15 +63,15 @@ function renderProducts(){
   let html = ""
   products.forEach(p=>{
     html += `
-    <div class="bg-white/5 p-4 rounded-xl">
-      <img src="${p.img}" class="w-full h-40 object-cover rounded mb-2">
+    <div class="bg-white/10 p-3">
+      <img src="${p.img}" class="w-full h-40 object-cover">
       <h3>${p.nama}</h3>
       <p>${rupiah(p.harga)}</p>
-      <p class="text-sm">Stok: ${p.stock}</p>
+      <p>Stok: ${p.stock}</p>
       ${
-        p.stock > 0
-        ? `<button onclick="add('${p.nama}')" class="bg-orange-500 w-full mt-2 py-1 rounded">+ Keranjang</button>`
-        : `<button disabled class="bg-gray-500 w-full mt-2 py-1 rounded">Habis</button>`
+        p.stock>0
+        ? `<button onclick="add('${p.nama}')" class="bg-orange-500 w-full mt-2">+ Keranjang</button>`
+        : `<button disabled class="bg-gray-500 w-full mt-2">Habis</button>`
       }
     </div>`
   })
@@ -113,6 +104,12 @@ function renderCart(){
     html += `<p>${i.nama} x${i.qty} = ${rupiah(sub)}</p>`
   })
 
+  // BONUS FIX
+  let bonus = Math.floor(qty/3)
+  if(bonus>0){
+    html += `<p style="color:lightgreen">🎁 Bonus Ayam Bawang x${bonus}</p>`
+  }
+
   document.getElementById("cart").innerHTML = html
   document.getElementById("total").innerText = rupiah(total)
   document.getElementById("cartCount").innerText = qty
@@ -139,6 +136,7 @@ function checkout(){
 
     let p = products.find(p=>p.nama===i.nama)
     p.stock -= i.qty
+    if(p.stock < 0) p.stock = 0
   })
 
   let bonus = Math.floor(qty/3)
@@ -147,7 +145,7 @@ function checkout(){
   }
 
   let ongkir = total>=50000 ? 0 : 10000
-  let grand = total+ongkir
+  let grand = total + ongkir
 
   text += `\nTotal: ${rupiah(grand)}`
   text += `\nNama: ${nama}`
