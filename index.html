@@ -62,15 +62,17 @@ let cart = []
 const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
 // =============================
-// DATA PRODUK (placeholder pasti muncul)
+// DATA PRODUK
+// =============================
 let products = [
-  { nama: "Ayam Bawang", harga: 15000, img: "https://via.placeholder.com/300x200?text=Ayam+Bawang", stock: 5, badge: "BEST SELLER" },
-  { nama: "Laksa", harga: 18000, img: "https://via.placeholder.com/300x200?text=Laksa", stock: 0, badge: "" },
-  { nama: "Goreng", harga: 17000, img: "https://via.placeholder.com/300x200?text=Goreng", stock: 3, badge: "FAVORIT" }
+  { nama: "Ayam Bawang", harga: 15000, img: "https://images.unsplash.com/photo-1512058564366-c9e3e0468a98?q=80&w=800", stock: 5, badge: "BEST SELLER" },
+  { nama: "Laksa", harga: 18000, img: "https://images.unsplash.com/photo-1553621042-f6e147245754?q=80&w=800", stock: 0, badge: "" },
+  { nama: "Goreng", harga: 17000, img: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?q=80&w=800", stock: 3, badge: "FAVORIT" }
 ]
 
 // =============================
 // RENDER PRODUK
+// =============================
 function renderProducts(){
   let html = ""
   products.forEach(p=>{
@@ -104,6 +106,7 @@ function renderProducts(){
 
 // =============================
 // CART
+// =============================
 function scrollToCart(){
   document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
 }
@@ -111,11 +114,13 @@ function scrollToCart(){
 function addToCart(nama){
   let p = products.find(p => p.nama === nama)
   let item = cart.find(i => i.nama === nama)
+
   if(item){
     if(item.qty < p.stock) item.qty++
   } else {
     cart.push({nama, harga:p.harga, qty:1})
   }
+
   renderCart()
 }
 
@@ -174,12 +179,19 @@ function renderCart(){
 
 // =============================
 // CHECKOUT WA
+// =============================
 function checkout(){
-  if(cart.length === 0){ alert("Keranjang kosong"); return }
+  if(cart.length === 0){
+    alert("Keranjang kosong")
+    return
+  }
 
   let nama = document.getElementById('nama').value.trim()
   let alamat = document.getElementById('alamat').value.trim()
-  if(!nama || !alamat){ alert("Isi nama & alamat dulu"); return }
+  if(!nama || !alamat){
+    alert("Isi nama & alamat dulu")
+    return
+  }
 
   let orderId = new Date().getTime().toString().slice(-6)
   let text = `🛒 *ORDER MISHOA.ID*\n📦 Order#${orderId}\n\n🍜 *Detail Pesanan:*\n`
@@ -217,7 +229,10 @@ function checkout(){
 
 // =============================
 // INIT
-window.onload = function(){ renderProducts() }
+// =============================
+window.onload = function(){
+  renderProducts()
+}
 </script>
 
 </body>
