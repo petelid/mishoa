@@ -29,7 +29,7 @@ body { font-family: 'Inter', sans-serif; }
     Misoa Premium <br> Cepat & Praktis 🍜
   </h2>
   <p class="text-gray-400 max-w-xl mx-auto mb-8">
-    Order langsung via WhatsApp. Tanpa ribet, cepat sampai, rasa konsisten.
+    Order langsung via WhatsApp. Tanpa ribet, cepat sampai.
   </p>
   <button onclick="scrollToCart()" class="bg-orange-500 px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
     Pesan Sekarang
@@ -58,18 +58,38 @@ body { font-family: 'Inter', sans-serif; }
 <script>
 let cart = []
 
-const formatRupiah = (n) => {
-  return "Rp" + n.toLocaleString("id-ID")
-}
+const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
+// =============================
 // DATA PRODUK
-const products = [
-  { nama: "Ayam Bawang", harga: 15000, img: "https://images.unsplash.com/photo-1512058564366-c9e3e0468a98", stock: 5, badge: "BEST SELLER" },
-  { nama: "Laksa", harga: 18000, img: "https://images.unsplash.com/photo-1553621042-f6e147245754", stock: 0, badge: "" },
-  { nama: "Goreng", harga: 17000, img: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841", stock: 3, badge: "FAVORIT" }
+// =============================
+let products = [
+  {
+    nama: "Ayam Bawang",
+    harga: 15000,
+    img: "https://images.unsplash.com/photo-1512058564366-c9e3e0468a98?q=80&w=800",
+    stock: 5,
+    badge: "BEST SELLER"
+  },
+  {
+    nama: "Laksa",
+    harga: 18000,
+    img: "https://images.unsplash.com/photo-1553621042-f6e147245754?q=80&w=800",
+    stock: 0,
+    badge: ""
+  },
+  {
+    nama: "Goreng",
+    harga: 17000,
+    img: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?q=80&w=800",
+    stock: 3,
+    badge: "FAVORIT"
+  }
 ]
 
+// =============================
 // RENDER PRODUK
+// =============================
 function renderProducts(){
   let html = ""
 
@@ -79,7 +99,7 @@ function renderProducts(){
 
       ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
 
-      <img src="${p.img}" class="w-full h-48 object-cover rounded-xl mb-4">
+      <img src="${p.img}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'" class="w-full h-48 object-cover rounded-xl mb-4">
 
       <h2 class="font-semibold text-lg">${p.nama}</h2>
       <p class="text-orange-400">${formatRupiah(p.harga)}</p>
@@ -87,12 +107,10 @@ function renderProducts(){
 
       ${
         p.stock > 0
-        ? `<button onclick="addToCart('${p.nama}')"
-            class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">
+        ? `<button onclick="addToCart('${p.nama}')" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">
             + Keranjang
           </button>`
-        : `<button disabled
-            class="w-full bg-gray-500 py-2 rounded-xl cursor-not-allowed">
+        : `<button disabled class="w-full bg-gray-500 py-2 rounded-xl">
             ❌ Habis
           </button>`
       }
@@ -104,7 +122,9 @@ function renderProducts(){
   document.getElementById("productList").innerHTML = html
 }
 
-// CART FUNCTION
+// =============================
+// CART
+// =============================
 function scrollToCart(){
   document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
 }
@@ -183,6 +203,9 @@ function renderCart(){
   document.getElementById('cartCount').innerText = totalQty
 }
 
+// =============================
+// CHECKOUT WA (UPGRADE)
+// =============================
 function checkout(){
   if(cart.length === 0){
     alert("Keranjang kosong")
@@ -210,12 +233,11 @@ function checkout(){
 
   cart.forEach(i=>{
     let sub = i.harga * i.qty
-    text += `• ${i.nama} x${i.qty} = Rp${sub.toLocaleString("id-ID")}
+    text += `• ${i.nama} x${i.qty} = ${formatRupiah(sub)}
 `
     total += sub
     totalQty += i.qty
 
-    // kurangi stok
     let p = products.find(p => p.nama === i.nama)
     if(p){
       p.stock -= i.qty
@@ -223,26 +245,18 @@ function checkout(){
     }
   })
 
-  // 🎁 BONUS
   let bonus = Math.floor(totalQty / 3)
   if(bonus > 0){
     text += `\n🎁 *Bonus:*\n• Ayam Bawang x${bonus}\n`
   }
 
-  // 🚚 ONGKIR (LOGIC SIMPLE)
-  let ongkir = 10000
-
-  // contoh upgrade dikit:
-  if(total >= 50000){
-    ongkir = 0 // gratis ongkir kalau > 50rb
-  }
-
+  let ongkir = total >= 50000 ? 0 : 10000
   let grandTotal = total + ongkir
 
   text += `
-💰 Subtotal: Rp${total.toLocaleString("id-ID")}
-🚚 Ongkir: Rp${ongkir.toLocaleString("id-ID")}
-💵 *Total Bayar: Rp${grandTotal.toLocaleString("id-ID")}*
+💰 Subtotal: ${formatRupiah(total)}
+🚚 Ongkir: ${formatRupiah(ongkir)}
+💵 *Total Bayar: ${formatRupiah(grandTotal)}*
 
 👤 Nama: ${nama}
 📍 Alamat: ${alamat}
@@ -250,9 +264,7 @@ function checkout(){
 Terima kasih kak 🙏
 `
 
-  let url = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
-
-  window.open(url)
+  window.open("https://wa.me/6282112007575?text=" + encodeURIComponent(text))
 
   cart = []
   document.getElementById('nama').value = ""
@@ -260,7 +272,11 @@ Terima kasih kak 🙏
 
   renderCart()
   renderProducts()
-}</script>
+}
+
+// INIT
+renderProducts()
+</script>
 
 </body>
 </html>
