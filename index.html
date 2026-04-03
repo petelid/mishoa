@@ -13,16 +13,6 @@ input, button { touch-action: manipulation; }
 </head>
 <body class="bg-black text-white">
 
-<!-- LOGIN MODAL -->
-<div id="loginModal" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-  <div class="bg-white/10 p-8 rounded-2xl max-w-sm w-full text-white">
-    <h2 class="text-xl font-bold mb-4">🔐 Admin Login</h2>
-    <input type="password" id="adminPass" placeholder="Masukkan password admin" class="w-full p-3 rounded-xl text-black mb-4">
-    <button onclick="checkLogin()" class="w-full bg-blue-500 py-2 rounded-xl hover:bg-blue-600 transition">Login</button>
-    <p class="text-red-400 mt-3 hidden" id="loginError">Password salah!</p>
-  </div>
-</div>
-
 <!-- NAVBAR -->
 <div class="sticky top-0 z-50 bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center backdrop-blur-sm">
   <h1 class="font-bold text-lg">🍜 Mishoa.id Admin + Checkout</h1>
@@ -49,64 +39,41 @@ input, button { touch-action: manipulation; }
 </div>
 
 <script>
-// ===== CONFIG =====
-// hash SHA-256 dari password "mishoa123"
-const ADMIN_HASH = "0dfe8e90091821763e44a1e3f1970c7f7d4b10b41d2c52e07f1cfbbab0d2c6b3"
-
-let adminMode = false
-let cart = []
-
-// ===== DATA PRODUK =====
 let products = [
   { nama: "Ayam Bawang", harga: 15000, stock: 5, badge: "BEST SELLER", img: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg" },
   { nama: "Laksa", harga: 18000, stock: 4, badge: "FAVORIT", img: "https://images.pexels.com/photos/36359897/pexels-photo-36359897.jpeg" },
   { nama: "Goreng", harga: 17000, stock: 3, badge: "", img: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg" }
 ]
 
-const formatRupiah = n => "Rp" + n.toLocaleString("id-ID")
+let cart = []
 
-// ===== LOGIN =====
-async function checkLogin(){
-  const pass = document.getElementById('adminPass').value
-  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass))
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2,'0')).join('')
-  
-  if(hashHex === ADMIN_HASH){
-    adminMode = true
-    document.getElementById('loginModal').style.display='none'
-    renderProducts()
-  } else {
-    document.getElementById('loginError').style.display='block'
-  }
-}
+const formatRupiah = n => "Rp" + n.toLocaleString("id-ID")
 
 // ===== RENDER PRODUK =====
 function renderProducts(){
-  let html=""
+  let html = ""
   products.forEach((p,i)=>{
-    html+=`
+    html += `
     <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
       ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
       <img src="${p.img}" class="w-full h-48 object-cover rounded-xl mb-4 shadow-md" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
       <h2 class="font-semibold text-lg mb-1">${p.nama}</h2>
       <div class="flex justify-between items-center mb-2">
         <span class="text-orange-400 font-semibold">Harga: ${formatRupiah(p.harga)}</span>
-        ${adminMode ? `<button onclick="editPrice(${i})" class="bg-blue-500 px-2 py-1 rounded hover:bg-blue-600 text-white text-xs">Ubah Harga</button>` : ""}
+        <button onclick="editPrice(${i})" class="bg-blue-500 px-2 py-1 rounded hover:bg-blue-600 text-white text-xs">Ubah Harga</button>
       </div>
       <div class="flex justify-between items-center mb-2">
         <span>Stok: ${p.stock}</span>
-        ${adminMode ? `
         <div class="flex gap-1">
           <button onclick="ubahStock(${i},-1)" class="bg-red-500 px-2 py-1 rounded hover:bg-red-600 text-xs">-</button>
           <button onclick="ubahStock(${i},1)" class="bg-green-500 px-2 py-1 rounded hover:bg-green-600 text-xs">+</button>
-        </div>` : ""}
+        </div>
       </div>
       ${p.stock>0 ? `<button onclick="addToCart('${p.nama}')" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">+ Keranjang</button>` : `<button disabled class="w-full bg-gray-500 py-2 rounded-xl">❌ Habis</button>`}
     </div>
     `
   })
-  document.getElementById('productList').innerHTML=html
+  document.getElementById('productList').innerHTML = html
 }
 
 // ===== ADMIN FUNCTIONS =====
@@ -175,8 +142,10 @@ function renderCart(){
       </div>
     `
   })
-  let bonus=Math.floor(totalQty/3)
+
+  let bonus = Math.floor(totalQty/3)
   if(bonus>0) html+=`<p class="text-green-400 mt-3">🎁 Bonus Ayam Bawang x${bonus}</p>`
+
   document.getElementById('cart').innerHTML=html
   document.getElementById('total').innerText=formatRupiah(total)
   document.getElementById('cartCount').innerText=totalQty
