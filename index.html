@@ -11,6 +11,7 @@
 <style>
 body { font-family: 'Inter', sans-serif; }
 input, button { touch-action: manipulation; }
+html { scroll-behavior: smooth; }
 </style>
 </head>
 
@@ -41,7 +42,7 @@ input, button { touch-action: manipulation; }
 <div id="productList" class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 sm:px-6 pb-16"></div>
 
 <!-- CART -->
-<div id="cartSection" class="max-w-xl mx-auto bg-white/20 border border-white/20 p-6 rounded-2xl mb-20">
+<div id="cartSection" class="max-w-xl mx-auto bg-white/20 border border-white/20 p-6 rounded-2xl mb-32">
   <h2 class="text-xl font-bold mb-4">🛒 Keranjang</h2>
 
   <div id="cart"></div>
@@ -61,39 +62,21 @@ let cart = []
 
 const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
-// ✅ DATA PRODUK (SUDAH FIX)
+// DATA PRODUK
 let products = [
-  { 
-    nama: "Ayam Bawang", 
-    harga: 15000, 
-    stock: 5, 
-    badge: "BEST SELLER", 
-    img: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg" 
-  },
-  { 
-    nama: "Laksa", 
-    harga: 18000, 
-    stock: 4, 
-    badge: "FAVORIT", 
-    img: "laksa.png" 
-  },
-  { 
-    nama: "Goreng", 
-    harga: 17000, 
-    stock: 3, 
-    badge: "", 
-    img: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg" 
-  }
+  { nama: "Ayam Bawang", harga: 15000, stock: 5, badge: "BEST SELLER", img: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg" },
+  { nama: "Laksa", harga: 18000, stock: 4, badge: "FAVORIT", img: "laksa.png" },
+  { nama: "Goreng", harga: 17000, stock: 3, badge: "", img: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg" }
 ]
 
-// ===== RENDER PRODUK =====
+// RENDER PRODUK
 function renderProducts(){
   let html = ""
   products.forEach(p=>{
     html += `
     <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
       ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
-      <img src="${p.img}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'" class="w-full h-48 object-cover rounded-xl mb-4 shadow-md">
+      <img src="${p.img}" loading="lazy" class="w-full h-48 object-cover rounded-xl mb-4 shadow-md">
       <h2 class="font-semibold text-lg">${p.nama}</h2>
       <p class="text-orange-400">${formatRupiah(p.harga)}</p>
       <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
@@ -109,7 +92,19 @@ function renderProducts(){
   document.getElementById("productList").innerHTML = html
 }
 
-// ===== CART LOGIC =====
+// AUTO SCROLL SAAT INPUT
+function setupInputFocus(){
+  const inputs = document.querySelectorAll("input")
+  inputs.forEach(input=>{
+    input.addEventListener("focus", ()=>{
+      setTimeout(()=>{
+        input.scrollIntoView({behavior:"smooth", block:"center"})
+      }, 300)
+    })
+  })
+}
+
+// CART LOGIC
 function addToCart(nama){
   let p = products.find(p => p.nama === nama)
   if(p.stock <= 0) return
@@ -156,7 +151,7 @@ function kurangQty(nama){
   renderProducts()
 }
 
-// ===== RENDER CART =====
+// RENDER CART
 function renderCart(){
   let html = ""
   let total = 0
@@ -194,7 +189,7 @@ function renderCart(){
   document.getElementById('cartCount').innerText = totalQty
 }
 
-// ===== CHECKOUT =====
+// CHECKOUT
 function checkout(){
   if(cart.length === 0){ alert("Keranjang kosong"); return }
 
@@ -234,7 +229,10 @@ function scrollToCart(){
   document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
 }
 
-window.onload = function(){ renderProducts() }
+window.onload = function(){ 
+  renderProducts()
+  setupInputFocus()
+}
 </script>
 
 </body>
