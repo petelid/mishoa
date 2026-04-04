@@ -2,85 +2,239 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mishoa.id 🍜</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
-body {
-  font-family: sans-serif;
-  padding-bottom: 300px; /* biar ga ketutup keyboard */
-}
+body { font-family: 'Inter', sans-serif; }
+input, button { touch-action: manipulation; }
 </style>
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-black text-white">
 
-<div class="max-w-md mx-auto p-4">
-
-  <!-- HEADER -->
-  <h1 class="text-2xl font-bold text-center mb-2">Mishoa 🍜</h1>
-  <p class="text-center text-gray-500 mb-4">Order cepat & praktis</p>
-
-  <!-- INFO IG BROWSER -->
-  <div class="bg-yellow-100 text-yellow-800 text-sm p-3 rounded-xl mb-4">
-    👉 Jika form tidak nyaman, buka di Chrome (klik titik 3 kanan atas)
+<!-- NAVBAR -->
+<div class="sticky top-0 z-50 bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center backdrop-blur-sm">
+  <h1 class="font-bold text-lg">🍜 Mishoa.id</h1>
+  <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold hover:scale-105 transition">
+    🛒 <span id="cartCount">0</span>
   </div>
-
-  <!-- FORM -->
-  <div class="bg-white p-4 rounded-2xl shadow">
-
-    <input type="text" id="nama" placeholder="Nama"
-      class="w-full border p-3 rounded-xl mb-3">
-
-    <textarea id="alamat" placeholder="Alamat"
-      class="w-full border p-3 rounded-xl mb-3"></textarea>
-
-    <select id="menu" class="w-full border p-3 rounded-xl mb-3">
-      <option value="">Pilih Menu</option>
-      <option>Misoa Original</option>
-      <option>Misoa Ayam Bawang</option>
-    </select>
-
-    <button onclick="orderWA()"
-      class="w-full bg-green-500 text-white p-3 rounded-xl font-bold">
-      Pesan via WhatsApp
-    </button>
-
-  </div>
-
 </div>
 
-<!-- SCRIPT ANTI KEYBOARD -->
+<!-- HERO -->
+<section class="text-center py-16 px-4 sm:px-6">
+  <h2 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
+    Misoa Premium <br> Cepat & Praktis 🍜
+  </h2>
+  <p class="text-gray-400 max-w-xl mx-auto mb-8">
+    Order langsung via WhatsApp. Tanpa ribet, cepat sampai.
+  </p>
+  <button onclick="scrollToCart()" class="bg-orange-500 px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
+    Pesan Sekarang
+  </button>
+</section>
+
+<!-- PRODUK -->
+<div id="productList" class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 sm:px-6 pb-16"></div>
+
+<!-- CART -->
+<div id="cartSection" class="max-w-xl mx-auto bg-white/20 border border-white/20 p-6 rounded-2xl mb-20">
+  <h2 class="text-xl font-bold mb-4">🛒 Keranjang</h2>
+
+  <div id="cart"></div>
+
+  <input id="nama" placeholder="Nama" class="bg-white/30 border border-white/20 p-3 w-full mt-3 rounded-xl text-black">
+  <input id="alamat" placeholder="Alamat" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
+
+  <h3 class="mt-4 font-bold text-lg">Total: <span id="total">Rp0</span></h3>
+
+  <button onclick="checkout()" class="bg-green-500 hover:bg-green-600 text-white w-full mt-4 py-3 rounded-xl transition">
+    Checkout via WhatsApp
+  </button>
+</div>
+
 <script>
-document.querySelectorAll('input, textarea, select').forEach(el => {
-  el.addEventListener('focus', () => {
-    setTimeout(() => {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300);
-  });
-});
-</script>
+let cart = []
 
-<!-- SCRIPT WA -->
-<script>
-function orderWA() {
-  let nama = document.getElementById("nama").value;
-  let alamat = document.getElementById("alamat").value;
-  let menu = document.getElementById("menu").value;
+const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
-  let text = `Halo saya mau order Mishoa 🍜
+// ✅ DATA PRODUK (SUDAH FIX)
+let products = [
+  { 
+    nama: "Ayam Bawang", 
+    harga: 15000, 
+    stock: 5, 
+    badge: "BEST SELLER", 
+    img: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg" 
+  },
+  { 
+    nama: "Laksa", 
+    harga: 18000, 
+    stock: 4, 
+    badge: "FAVORIT", 
+    img: "laksa.png" 
+  },
+  { 
+    nama: "Goreng", 
+    harga: 17000, 
+    stock: 3, 
+    badge: "", 
+    img: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg" 
+  }
+]
 
-Nama: ${nama}
-Alamat: ${alamat}
-Pesanan: ${menu}`;
+// ===== RENDER PRODUK =====
+function renderProducts(){
+  let html = ""
+  products.forEach(p=>{
+    html += `
+    <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
+      ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
+      <img src="${p.img}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'" class="w-full h-48 object-cover rounded-xl mb-4 shadow-md">
+      <h2 class="font-semibold text-lg">${p.nama}</h2>
+      <p class="text-orange-400">${formatRupiah(p.harga)}</p>
+      <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
 
-  let url = "https://wa.me/6282112007575?text=" + encodeURIComponent(text);
-
-  window.open(url, '_blank');
+      ${
+        p.stock > 0
+        ? `<button onclick="addToCart('${p.nama}')" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">+ Keranjang</button>`
+        : `<button disabled class="w-full bg-gray-500 py-2 rounded-xl">❌ Habis</button>`
+      }
+    </div>
+    `
+  })
+  document.getElementById("productList").innerHTML = html
 }
+
+// ===== CART LOGIC =====
+function addToCart(nama){
+  let p = products.find(p => p.nama === nama)
+  if(p.stock <= 0) return
+
+  let item = cart.find(i => i.nama === nama)
+
+  if(item){
+    item.qty++
+  } else {
+    cart.push({nama, harga:p.harga, qty:1})
+  }
+
+  p.stock--
+  renderCart()
+  renderProducts()
+}
+
+function tambahQty(nama){
+  let item = cart.find(i => i.nama === nama)
+  let p = products.find(p => p.nama === nama)
+
+  if(p.stock <= 0) return
+
+  item.qty++
+  p.stock--
+  renderCart()
+  renderProducts()
+}
+
+function kurangQty(nama){
+  let item = cart.find(i => i.nama === nama)
+  let p = products.find(p => p.nama === nama)
+
+  if(item){
+    item.qty--
+    p.stock++
+
+    if(item.qty <= 0){
+      cart = cart.filter(i => i.nama !== nama)
+    }
+  }
+
+  renderCart()
+  renderProducts()
+}
+
+// ===== RENDER CART =====
+function renderCart(){
+  let html = ""
+  let total = 0
+  let totalQty = 0
+
+  cart.forEach(item=>{
+    let sub = item.harga * item.qty
+    total += sub
+    totalQty += item.qty
+
+    html += `
+    <div class="flex justify-between items-center border-b border-white/20 py-2">
+      <div>
+        <p class="font-semibold">${item.nama}</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="kurangQty('${item.nama}')" class="px-2 bg-white/20 rounded">-</button>
+          <span>${item.qty}</span>
+          <button onclick="tambahQty('${item.nama}')" class="px-2 bg-white/20 rounded">+</button>
+        </div>
+      </div>
+      <div class="text-right">
+        <p>${formatRupiah(sub)}</p>
+      </div>
+    </div>
+    `
+  })
+
+  let bonus = Math.floor(totalQty / 3)
+  if(bonus > 0){
+    html += `<p class="text-green-400 mt-3">🎁 Bonus Ayam Bawang x${bonus}</p>`
+  }
+
+  document.getElementById('cart').innerHTML = html
+  document.getElementById('total').innerText = formatRupiah(total)
+  document.getElementById('cartCount').innerText = totalQty
+}
+
+// ===== CHECKOUT =====
+function checkout(){
+  if(cart.length === 0){ alert("Keranjang kosong"); return }
+
+  let nama = document.getElementById('nama').value.trim()
+  let alamat = document.getElementById('alamat').value.trim()
+  if(!nama||!alamat){ alert("Isi nama & alamat dulu"); return }
+
+  let orderId = new Date().getTime().toString().slice(-6)
+  let text = `🛒 *ORDER MISHOA.ID*\n📦 Order#${orderId}\n\n🍜 *Detail Pesanan:*\n`
+  let total = 0
+  let totalQty = 0
+
+  cart.forEach(i=>{
+    let sub = i.harga * i.qty
+    text += `• ${i.nama} x${i.qty} = ${formatRupiah(sub)}\n`
+    total += sub
+    totalQty += i.qty
+  })
+
+  let bonus = Math.floor(totalQty / 3)
+  if(bonus > 0){
+    text += `\n🎁 *Bonus:*\n• Ayam Bawang x${bonus}\n`
+  }
+
+  text += `\n💰 Subtotal: ${formatRupiah(total)}\n🚚 Ongkir: Rp0\n\n👤 ${nama}\n📍 ${alamat}`
+
+  window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
+
+  cart=[]
+  document.getElementById('nama').value=""
+  document.getElementById('alamat').value=""
+  renderCart()
+  renderProducts()
+}
+
+function scrollToCart(){
+  document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
+}
+
+window.onload = function(){ renderProducts() }
 </script>
 
 </body>
