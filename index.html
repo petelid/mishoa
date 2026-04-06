@@ -110,7 +110,7 @@ function renderProducts(){
     html += `
     <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
       ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
-      <img src="${p.img}" loading="lazy" class="w-full h-48 object-cover rounded-xl mb-4 shadow-md">
+      <img src="${p.img}" loading="lazy" class="w-full h-auto rounded-xl mb-4 shadow-md">
       <h2 class="font-semibold text-lg">${p.nama}</h2>
       <p class="text-orange-400">${formatRupiah(p.harga)}</p>
       <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
