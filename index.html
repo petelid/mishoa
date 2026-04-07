@@ -46,7 +46,16 @@ img {
 </section>
 
 <!-- PRODUK -->
-<div id="productList" class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 sm:px-6 pb-16"></div>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+  
+  <div class="overflow-hidden relative">
+    <div id="slider" class="flex"></div>
+  </div>
+
+  <!-- DOT -->
+  <div id="dots" class="flex justify-center gap-2 mt-4"></div>
+
+</div>
 
 <!-- CART -->
 <div id="cartSection" class="max-w-xl mx-auto bg-white/20 border border-white/20 p-6 rounded-2xl mb-32">
@@ -64,7 +73,7 @@ img {
   </button>
 </div>
 
- <!-- ===== Follow Instagram Button FINAL ===== -->
+<!-- IG -->
 <div style="display:flex; justify-content:center; margin:20px 0;">
   <a href="https://www.instagram.com/mishoa.id" target="_blank" 
      style="
@@ -96,96 +105,61 @@ let cart = []
 
 const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
-// DATA PRODUK
 let products = [
   { nama: "Ayam Bawang", harga: 15000, stock: 10, badge: "BEST SELLER", img: "ayam bawang.png?v=3" },
   { nama: "Laksa", harga: 18000, stock: 10, badge: "FAVORIT", img: "laksa.png" },
   { nama: "Goreng", harga: 17000, stock: 10, badge: "", img: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg" }
 ]
 
-// RENDER PRODUK
 function renderProducts(){
-  let html = ""
-  products.forEach(p=>{
-    html += `
-    <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
-      ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
-      <img src="${p.img}" loading="lazy" class="w-full h-auto rounded-xl mb-4 shadow-md">
-      <h2 class="font-semibold text-lg">${p.nama}</h2>
-      <p class="text-orange-400">${formatRupiah(p.harga)}</p>
-      <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
+  let perSlide = 2
+  let slides = []
 
-      ${
-        p.stock > 0
-        ? `<button onclick="addToCart('${p.nama}')" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">+ Keranjang</button>`
-        : `<button disabled class="w-full bg-gray-500 py-2 rounded-xl">❌ Habis</button>`
-      }
-    </div>
-    `
-  })
-  document.getElementById("productList").innerHTML = html
-}
+  for(let i=0; i<products.length; i+=perSlide){
+    let group = products.slice(i, i+perSlide)
 
-// AUTO SCROLL SAAT INPUT
-function setupInputFocus(){
-  const inputs = document.querySelectorAll("input")
-  inputs.forEach(input=>{
-    input.addEventListener("focus", ()=>{
-      setTimeout(()=>{
-        input.scrollIntoView({behavior:"smooth", block:"center"})
-      }, 300)
+    let html = `<div class="min-w-full grid grid-cols-2 gap-6">`
+
+    group.forEach(p=>{
+      html += `
+      <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
+        ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
+        <img src="${p.img}" loading="lazy" class="w-full h-auto rounded-xl mb-4 shadow-md">
+        <h2 class="font-semibold text-lg">${p.nama}</h2>
+        <p class="text-orange-400">${formatRupiah(p.harga)}</p>
+        <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
+
+        ${
+          p.stock > 0
+          ? `<button onclick="addToCart('${p.nama}')" class="w-full bg-orange-500 py-2 rounded-xl hover:bg-orange-600 active:scale-95">+ Keranjang</button>`
+          : `<button disabled class="w-full bg-gray-500 py-2 rounded-xl">❌ Habis</button>`
+        }
+      </div>
+      `
     })
-  })
+
+    html += `</div>`
+    slides.push(html)
+  }
+
+  document.getElementById("slider").innerHTML = slides.join("")
+  createDots(slides.length)
 }
 
-// CART LOGIC
 function addToCart(nama){
   let p = products.find(p => p.nama === nama)
   if(p.stock <= 0) return
 
   let item = cart.find(i => i.nama === nama)
 
-  if(item){
-    item.qty++
-  } else {
-    cart.push({nama, harga:p.harga, qty:1})
-  }
+  if(item){ item.qty++ } 
+  else { cart.push({nama, harga:p.harga, qty:1}) }
 
   p.stock--
   renderCart()
   renderProducts()
 }
 
-function tambahQty(nama){
-  let item = cart.find(i => i.nama === nama)
-  let p = products.find(p => p.nama === nama)
-
-  if(p.stock <= 0) return
-
-  item.qty++
-  p.stock--
-  renderCart()
-  renderProducts()
-}
-
-function kurangQty(nama){
-  let item = cart.find(i => i.nama === nama)
-  let p = products.find(p => p.nama === nama)
-
-  if(item){
-    item.qty--
-    p.stock++
-
-    if(item.qty <= 0){
-      cart = cart.filter(i => i.nama !== nama)
-    }
-  }
-
-  renderCart()
-  renderProducts()
-}
-
-// RENDER CART
 function renderCart(){
   let html = ""
   let total = 0
@@ -200,11 +174,6 @@ function renderCart(){
     <div class="flex justify-between items-center border-b border-white/20 py-2">
       <div>
         <p class="font-semibold">${item.nama}</p>
-        <div class="flex items-center gap-2 mt-1">
-          <button onclick="kurangQty('${item.nama}')" class="px-2 bg-white/20 rounded">-</button>
-          <span>${item.qty}</span>
-          <button onclick="tambahQty('${item.nama}')" class="px-2 bg-white/20 rounded">+</button>
-        </div>
       </div>
       <div class="text-right">
         <p>${formatRupiah(sub)}</p>
@@ -213,17 +182,11 @@ function renderCart(){
     `
   })
 
-  let bonus = Math.floor(totalQty / 3)
-  if(bonus > 0){
-    html += `<p class="text-green-400 mt-3">🎁 Bonus Ayam Bawang x${bonus}</p>`
-  }
-
   document.getElementById('cart').innerHTML = html
   document.getElementById('total').innerText = formatRupiah(total)
   document.getElementById('cartCount').innerText = totalQty
 }
 
-// CHECKOUT
 function checkout(){
   if(cart.length === 0){ alert("Keranjang kosong"); return }
 
@@ -231,41 +194,90 @@ function checkout(){
   let alamat = document.getElementById('alamat').value.trim()
   if(!nama||!alamat){ alert("Isi nama & alamat dulu"); return }
 
-  let orderId = new Date().getTime().toString().slice(-6)
-  let text = `🛒 *ORDER MISHOA.ID*\n📦 Order#${orderId}\n\n🍜 *Detail Pesanan:*\n`
-  let total = 0
-  let totalQty = 0
-
-  cart.forEach(i=>{
-    let sub = i.harga * i.qty
-    text += `• ${i.nama} x${i.qty} = ${formatRupiah(sub)}\n`
-    total += sub
-    totalQty += i.qty
-  })
-
-  let bonus = Math.floor(totalQty / 3)
-  if(bonus > 0){
-    text += `\n🎁 *Bonus:*\n• Ayam Bawang x${bonus}\n`
-  }
-
-  text += `\n💰 Subtotal: ${formatRupiah(total)}\n🚚 Ongkir: Rp0\n\n👤 ${nama}\n📍 ${alamat}`
+  let text = `ORDER MISHOA\n`
+  cart.forEach(i=> text += `${i.nama} x${i.qty}\n`)
 
   window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
-
-  cart=[]
-  document.getElementById('nama').value=""
-  document.getElementById('alamat').value=""
-  renderCart()
-  renderProducts()
 }
 
 function scrollToCart(){
   document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
 }
 
+/* SLIDER FIX */
+let current = 0
+let slider, total
+let interval
+let startX = 0
+let isDragging = false
+
+function startSlider(){
+  slider = document.getElementById("slider")
+  total = slider.children.length
+  startAuto()
+  addTouch()
+}
+
+function startAuto(){
+  clearInterval(interval)
+  interval = setInterval(()=> moveTo(current + 1), 3000)
+}
+
+function moveTo(index){
+  if(index >= total) index = 0
+  if(index < 0) index = total - 1
+
+  current = index
+  slider.style.transition = "transform 0.5s ease"
+  slider.style.transform = `translateX(-${current * 100}%)`
+  updateDots()
+}
+
+function createDots(n){
+  let dots = ""
+  for(let i=0;i<n;i++){
+    dots += `<div class="w-2 h-2 rounded-full bg-white/30" id="dot${i}"></div>`
+  }
+  document.getElementById("dots").innerHTML = dots
+  updateDots()
+}
+
+function updateDots(){
+  for(let i=0;i<total;i++){
+    let dot = document.getElementById("dot"+i)
+    dot.className = "w-2 h-2 rounded-full " + (i===current ? "bg-orange-500" : "bg-white/30")
+  }
+}
+
+function addTouch(){
+  slider.addEventListener("touchstart", e=>{
+    clearInterval(interval)
+    startX = e.touches[0].clientX
+    isDragging = true
+    slider.style.transition = "none"
+  })
+
+  slider.addEventListener("touchmove", e=>{
+    if(!isDragging) return
+    let diff = e.touches[0].clientX - startX
+    slider.style.transform = `translateX(calc(-${current * 100}% + ${diff}px))`
+  })
+
+  slider.addEventListener("touchend", e=>{
+    isDragging = false
+    let diff = e.changedTouches[0].clientX - startX
+
+    if(diff > 50) moveTo(current - 1)
+    else if(diff < -50) moveTo(current + 1)
+    else moveTo(current)
+
+    startAuto()
+  })
+}
+
 window.onload = function(){ 
   renderProducts()
-  setupInputFocus()
+  startSlider()
 }
 </script>
 
