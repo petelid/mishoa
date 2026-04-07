@@ -131,10 +131,10 @@ function renderProducts(){
     html += `
     <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
 
-      ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
+      ${p.badge ? `<span class="absolute top-3 left-3 z-10 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
 
       <!-- SLIDER PER PRODUK -->
-      <div class="overflow-hidden rounded-xl mb-4">
+      <div class="overflow-hidden rounded-xl mb-4 relative">
         <div class="flex transition-all duration-500" id="slider-${index}">
           
           ${p.imgs.map(img => `
