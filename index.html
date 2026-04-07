@@ -226,8 +226,34 @@ function checkout(){
   let alamat = document.getElementById('alamat').value.trim()
   if(!nama||!alamat){ alert("Isi nama & alamat dulu"); return }
 
-  let text = `ORDER MISHOA\n`
-  cart.forEach(i=> text += `${i.nama} x${i.qty}\n`)
+  // 🔥 ORDER ID
+  let orderId = new Date().getTime().toString().slice(-6)
+
+  let text = `🛒 *ORDER MISHOA.ID*\n`
+  text += `📦 Order#${orderId}\n\n`
+  text += `🍜 *Detail Pesanan:*\n`
+
+  let total = 0
+  let totalQty = 0
+
+  cart.forEach(i=>{
+    let sub = i.harga * i.qty
+    text += `• ${i.nama} x${i.qty} = ${formatRupiah(sub)}\n`
+    total += sub
+    totalQty += i.qty
+  })
+
+  // 🎁 BONUS (setiap beli 3 gratis 1 ayam bawang)
+  let bonus = Math.floor(totalQty / 3)
+  if(bonus > 0){
+    text += `\n🎁 *Bonus:*\n`
+    text += `• Ayam Bawang x${bonus}\n`
+  }
+
+  text += `\n💰 Subtotal: ${formatRupiah(total)}\n`
+  text += `🚚 Ongkir: Rp0\n\n`
+  text += `👤 ${nama}\n`
+  text += `📍 ${alamat}`
 
   window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
 }
