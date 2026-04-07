@@ -98,29 +98,10 @@ let cart = []
 
 const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
-// ✅ PRODUK (SUDAH SUPPORT 2 FOTO)
 let products = [
-  { 
-    nama: "Ayam Bawang", 
-    harga: 15000, 
-    stock: 10, 
-    badge: "BEST SELLER", 
-    imgs: ["ayam bawang.png?v=3", ""] 
-  },
-  { 
-    nama: "Laksa", 
-    harga: 18000, 
-    stock: 10, 
-    badge: "FAVORIT", 
-    imgs: ["laksa.png", ""] 
-  },
-  { 
-    nama: "Goreng", 
-    harga: 17000, 
-    stock: 10, 
-    badge: "", 
-    imgs: ["https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg", ""] 
-  }
+  { nama: "Ayam Bawang", harga: 15000, stock: 10, badge: "BEST SELLER", imgs: ["ayam bawang.png?v=3", ""] },
+  { nama: "Laksa", harga: 18000, stock: 10, badge: "FAVORIT", imgs: ["laksa.png", ""] },
+  { nama: "Goreng", harga: 17000, stock: 10, badge: "", imgs: ["https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg", ""] }
 ]
 
 // RENDER PRODUK
@@ -133,14 +114,9 @@ function renderProducts(){
 
       ${p.badge ? `<span class="absolute top-3 left-3 z-10 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
 
-      <!-- SLIDER PER PRODUK -->
       <div class="overflow-hidden rounded-xl mb-4 relative">
         <div class="flex transition-all duration-500" id="slider-${index}">
-          
-          ${p.imgs.map(img => `
-            <img src="${img || p.imgs[0]}" class="w-full flex-shrink-0">
-          `).join("")}
-
+          ${p.imgs.map(img => `<img src="${img || p.imgs[0]}" class="w-full flex-shrink-0">`).join("")}
         </div>
       </div>
 
@@ -159,11 +135,10 @@ function renderProducts(){
   })
 
   document.getElementById("productList").innerHTML = html
-
   startAllSliders()
 }
 
-// AUTO SLIDER PER PRODUK
+// SLIDER FIX
 let sliderIntervals = []
 
 function startAllSliders(){
@@ -202,7 +177,7 @@ function addToCart(nama){
   renderProducts()
 }
 
-  function tambahQty(nama){
+function tambahQty(nama){
   let item = cart.find(i => i.nama === nama)
   let p = products.find(p => p.nama === nama)
 
@@ -232,6 +207,7 @@ function kurangQty(nama){
   renderProducts()
 }
 
+// RENDER CART (FIX FINAL)
 function renderCart(){
   let html = ""
   let total = 0
@@ -263,13 +239,8 @@ function renderCart(){
   document.getElementById('total').innerText = formatRupiah(total)
   document.getElementById('cartCount').innerText = totalQty
 }
-  })
 
-  document.getElementById('cart').innerHTML = html
-  document.getElementById('total').innerText = formatRupiah(total)
-  document.getElementById('cartCount').innerText = totalQty
-}
-
+// CHECKOUT
 function checkout(){
   if(cart.length === 0){ alert("Keranjang kosong"); return }
 
@@ -277,7 +248,6 @@ function checkout(){
   let alamat = document.getElementById('alamat').value.trim()
   if(!nama||!alamat){ alert("Isi nama & alamat dulu"); return }
 
-  // 🔥 ORDER ID
   let orderId = new Date().getTime().toString().slice(-6)
 
   let text = `🛒 *ORDER MISHOA.ID*\n`
@@ -294,7 +264,6 @@ function checkout(){
     totalQty += i.qty
   })
 
-  // 🎁 BONUS (setiap beli 3 gratis 1 ayam bawang)
   let bonus = Math.floor(totalQty / 3)
   if(bonus > 0){
     text += `\n🎁 *Bonus:*\n`
@@ -316,6 +285,7 @@ function scrollToCart(){
 window.onload = function(){ 
   renderProducts()
 }
+  
 </script>
 
 </body>
