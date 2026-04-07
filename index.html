@@ -164,16 +164,26 @@ function renderProducts(){
 }
 
 // AUTO SLIDER PER PRODUK
+let sliderIntervals = []
+
 function startAllSliders(){
+  sliderIntervals.forEach(i => clearInterval(i))
+  sliderIntervals = []
+
   products.forEach((p, index)=>{
     let el = document.getElementById(`slider-${index}`)
     let current = 0
 
-    setInterval(()=>{
+    let imgs = p.imgs.filter(img => img && img.trim() !== "")
+    if(imgs.length <= 1) return
+
+    let interval = setInterval(()=>{
       current++
-      if(current >= p.imgs.length) current = 0
+      if(current >= imgs.length) current = 0
       el.style.transform = `translateX(-${current * 100}%)`
     }, 2500)
+
+    sliderIntervals.push(interval)
   })
 }
 
@@ -192,6 +202,36 @@ function addToCart(nama){
   renderProducts()
 }
 
+  function tambahQty(nama){
+  let item = cart.find(i => i.nama === nama)
+  let p = products.find(p => p.nama === nama)
+
+  if(p.stock <= 0) return
+
+  item.qty++
+  p.stock--
+
+  renderCart()
+  renderProducts()
+}
+
+function kurangQty(nama){
+  let item = cart.find(i => i.nama === nama)
+  let p = products.find(p => p.nama === nama)
+
+  if(!item) return
+
+  item.qty--
+  p.stock++
+
+  if(item.qty <= 0){
+    cart = cart.filter(i => i.nama !== nama)
+  }
+
+  renderCart()
+  renderProducts()
+}
+
 function renderCart(){
   let html = ""
   let total = 0
@@ -205,12 +245,12 @@ function renderCart(){
     html += `
     <div class="flex justify-between items-center border-b border-white/20 py-2">
       <div>
-        <p class="font-semibold">${item.nama}</p>
-      </div>
-      <div class="text-right">
-        <p>${formatRupiah(sub)}</p>
-      </div>
-    </div>
+       <div class="flex items-center gap-2 mt-1">
+    <button onclick="kurangQty('${item.nama}')" class="px-2 bg-white/20 rounded">-</button>
+    <span>${item.qty}</span>
+    <button onclick="tambahQty('${item.nama}')" class="px-2 bg-white/20 rounded">+</button>
+  </div>
+</div>
     `
   })
 
