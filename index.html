@@ -45,8 +45,10 @@ img {
   </button>
 </section>
 
-<!-- PRODUK (TETAP GRID) -->
-<div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 sm:px-6 pb-16" id="productList"></div>
+<!-- PRODUK -->
+<div class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+  <div id="productList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+</div>
 
 <!-- CART -->
 <div id="cartSection" class="max-w-xl mx-auto bg-white/20 border border-white/20 p-6 rounded-2xl mb-32">
@@ -67,11 +69,26 @@ img {
 <!-- IG -->
 <div style="display:flex; justify-content:center; margin:20px 0;">
   <a href="https://www.instagram.com/mishoa.id" target="_blank" 
-     style="display:inline-flex;align-items:center;gap:10px;padding:12px 20px;
-     background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af,#515bd4);
-     color:white;font-weight:600;font-size:16px;text-decoration:none;
-     border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.2);">
-    <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" style="width:24px;height:24px;">
+     style="
+       display:inline-flex;
+       align-items:center;
+       gap:10px;
+       padding:12px 20px;
+       background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af,#515bd4);
+       color:white;
+       font-weight:600;
+       font-size:16px;
+       text-decoration:none;
+       border-radius:12px;
+       box-shadow:0 4px 10px rgba(0,0,0,0.2);
+       transition: transform 0.2s, box-shadow 0.2s;
+     "
+     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.3)';"
+     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.2)';"
+  >
+    <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" 
+         alt="Instagram" 
+         style="width:24px;height:24px;">
     Follow Kami di Instagram
   </a>
 </div>
@@ -81,31 +98,28 @@ let cart = []
 
 const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
-// ✅ SETIAP PRODUK PUNYA 2 FOTO
+// ✅ PRODUK (SUDAH SUPPORT 2 FOTO)
 let products = [
   { 
     nama: "Ayam Bawang", 
     harga: 15000, 
     stock: 10, 
     badge: "BEST SELLER", 
-    imgs: ["ayam bawang.png?v=3", "laksa.png"] 
+    imgs: ["ayam bawang.png?v=3", ""] 
   },
   { 
     nama: "Laksa", 
     harga: 18000, 
     stock: 10, 
     badge: "FAVORIT", 
-    imgs: ["laksa.png", "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg"] 
+    imgs: ["laksa.png", ""] 
   },
   { 
     nama: "Goreng", 
     harga: 17000, 
     stock: 10, 
     badge: "", 
-    imgs: [
-      "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg",
-      "laksa.png"
-    ] 
+    imgs: ["https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg", ""] 
   }
 ]
 
@@ -116,13 +130,17 @@ function renderProducts(){
   products.forEach((p, index)=>{
     html += `
     <div class="bg-white/10 border border-white/10 rounded-2xl p-4 relative hover:scale-105 transition-all duration-200">
-      
+
       ${p.badge ? `<span class="absolute top-3 left-3 bg-orange-500 text-xs px-2 py-1 rounded">${p.badge}</span>` : ""}
-      
-      <!-- SLIDER FOTO -->
+
+      <!-- SLIDER PER PRODUK -->
       <div class="overflow-hidden rounded-xl mb-4">
-        <div id="imgSlider${index}" class="flex transition-all duration-500">
-          ${p.imgs.map(img => `<img src="${img}" class="w-full flex-shrink-0">`).join("")}
+        <div class="flex transition-all duration-500" id="slider-${index}">
+          
+          ${p.imgs.map(img => `
+            <img src="${img || p.imgs[0]}" class="w-full flex-shrink-0">
+          `).join("")}
+
         </div>
       </div>
 
@@ -142,17 +160,18 @@ function renderProducts(){
 
   document.getElementById("productList").innerHTML = html
 
-  startImageSlider()
+  startAllSliders()
 }
 
-// AUTO SLIDE FOTO
-function startImageSlider(){
+// AUTO SLIDER PER PRODUK
+function startAllSliders(){
   products.forEach((p, index)=>{
-    let el = document.getElementById("imgSlider"+index)
+    let el = document.getElementById(`slider-${index}`)
     let current = 0
 
     setInterval(()=>{
-      current = (current + 1) % p.imgs.length
+      current++
+      if(current >= p.imgs.length) current = 0
       el.style.transform = `translateX(-${current * 100}%)`
     }, 2500)
   })
@@ -185,8 +204,12 @@ function renderCart(){
 
     html += `
     <div class="flex justify-between items-center border-b border-white/20 py-2">
-      <div><p class="font-semibold">${item.nama}</p></div>
-      <div><p>${formatRupiah(sub)}</p></div>
+      <div>
+        <p class="font-semibold">${item.nama}</p>
+      </div>
+      <div class="text-right">
+        <p>${formatRupiah(sub)}</p>
+      </div>
     </div>
     `
   })
@@ -196,7 +219,6 @@ function renderCart(){
   document.getElementById('cartCount').innerText = totalQty
 }
 
-// CHECKOUT
 function checkout(){
   if(cart.length === 0){ alert("Keranjang kosong"); return }
 
