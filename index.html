@@ -245,13 +245,24 @@ function renderCart(){
     html += `
     <div class="flex justify-between items-center border-b border-white/20 py-2">
       <div>
-       <div class="flex items-center gap-2 mt-1">
-    <button onclick="kurangQty('${item.nama}')" class="px-2 bg-white/20 rounded">-</button>
-    <span>${item.qty}</span>
-    <button onclick="tambahQty('${item.nama}')" class="px-2 bg-white/20 rounded">+</button>
-  </div>
-</div>
+        <p class="font-semibold">${item.nama}</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="kurangQty('${item.nama}')" class="px-2 bg-white/20 rounded">-</button>
+          <span>${item.qty}</span>
+          <button onclick="tambahQty('${item.nama}')" class="px-2 bg-white/20 rounded">+</button>
+        </div>
+      </div>
+      <div class="text-right">
+        <p>${formatRupiah(sub)}</p>
+      </div>
+    </div>
     `
+  })
+
+  document.getElementById('cart').innerHTML = html
+  document.getElementById('total').innerText = formatRupiah(total)
+  document.getElementById('cartCount').innerText = totalQty
+}
   })
 
   document.getElementById('cart').innerHTML = html
