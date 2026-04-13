@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +7,7 @@
 <title>Mishoa.id 🍜</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -20,11 +22,13 @@ img {
   border-radius: 12px;
 }
 </style>
+
 </head>
 
 <body class="bg-black text-white">
 
 <!-- NAVBAR -->
+
 <div class="sticky top-0 z-50 bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center backdrop-blur-sm">
   <h1 class="font-bold text-lg">🍜 Mishoa.id</h1>
   <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold hover:scale-105 transition">
@@ -33,6 +37,7 @@ img {
 </div>
 
 <!-- HERO -->
+
 <section class="text-center py-16 px-4 sm:px-6">
   <h2 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
     Mishoa Premium <br> Cepat & Praktis 🍜
@@ -46,11 +51,13 @@ img {
 </section>
 
 <!-- PRODUK -->
+
 <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
   <div id="productList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
 </div>
 
 <!-- CART -->
+
 <div id="cartSection" class="max-w-xl mx-auto bg-white/20 border border-white/20 p-6 rounded-2xl mb-32">
   <h2 class="text-xl font-bold mb-4">🛒 Keranjang</h2>
 
@@ -69,6 +76,7 @@ img {
 </div>
 
 <!-- IG -->
+
 <div style="display:flex; justify-content:center; margin:20px 0;">
   <a href="https://www.instagram.com/mishoa.id" target="_blank" 
      style="
@@ -101,9 +109,9 @@ let cart = []
 const formatRupiah = (n) => "Rp" + n.toLocaleString("id-ID")
 
 let products = [
-  { nama: "Ayam Bawang", harga: 15000, stock: 10, badge: "BEST SELLER", imgs: ["ayam bawang.png?v=3", ""] },
-  { nama: "Laksa", harga: 18000, stock: 10, badge: "FAVORIT", imgs: ["laksa.png", ""] },
-  { nama: "mala", harga: 18000, stock: 10, badge: "NEW", imgs: ["mala.png", ""] }
+  { nama: "Ayam Bawang", mandarin: "葱油鸡", harga: 15000, stock: 10, badge: "BEST SELLER", imgs: ["ayam bawang.png?v=3", ""] },
+  { nama: "Laksa", mandarin: "叻沙", harga: 18000, stock: 10, badge: "FAVORIT", imgs: ["laksa.png", ""] },
+  { nama: "Mala", mandarin: "麻辣味", harga: 18000, stock: 10, badge: "NEW", imgs: ["mala.png", ""] }
 ]
 
 // RENDER PRODUK
@@ -122,7 +130,11 @@ function renderProducts(){
         </div>
       </div>
 
-      <h2 class="font-semibold text-lg">${p.nama}</h2>
+      <h2 class="font-semibold text-lg leading-tight">
+        ${p.nama}
+        <span class="block text-xs text-gray-400">${p.mandarin}</span>
+      </h2>
+
       <p class="text-orange-400">${formatRupiah(p.harga)}</p>
       <p class="text-sm text-gray-400 mb-2">Stok: ${p.stock}</p>
 
@@ -140,7 +152,7 @@ function renderProducts(){
   startAllSliders()
 }
 
-// SLIDER FIX
+// SLIDER
 let sliderIntervals = []
 
 function startAllSliders(){
@@ -209,7 +221,7 @@ function kurangQty(nama){
   renderProducts()
 }
 
-// RENDER CART (FIX FINAL)
+// RENDER CART
 function renderCart(){
   let html = ""
   let total = 0
@@ -220,10 +232,15 @@ function renderCart(){
     total += sub
     totalQty += item.qty
 
+    let mandarin = products.find(p => p.nama === item.nama)?.mandarin || ""
+
     html += `
     <div class="flex justify-between items-center border-b border-white/20 py-2">
       <div>
-        <p class="font-semibold">${item.nama}</p>
+        <p class="font-semibold leading-tight">
+          ${item.nama}
+          <span class="block text-xs text-gray-400">${mandarin}</span>
+        </p>
         <div class="flex items-center gap-2 mt-1">
           <button onclick="kurangQty('${item.nama}')" class="px-2 bg-white/20 rounded">-</button>
           <span>${item.qty}</span>
@@ -235,18 +252,18 @@ function renderCart(){
       </div>
     </div>
     `
-})
+  })
   
-  // 🎁 BONUS UI
-let bonus = Math.floor(totalQty / 3)
+  let bonus = Math.floor(totalQty / 3)
 
-if(bonus > 0){
-  html += `
-  <div class="mt-3 p-3 bg-green-500/20 border border-green-500/30 rounded-xl text-sm">
-    🎁 Bonus: Ayam Bawang x${bonus}
-  </div>
-  `
-}
+  if(bonus > 0){
+    html += `
+    <div class="mt-3 p-3 bg-green-500/20 border border-green-500/30 rounded-xl text-sm">
+      🎁 Bonus: Ayam Bawang x${bonus}
+    </div>
+    `
+  }
+
   document.getElementById('cart').innerHTML = html
   document.getElementById('total').innerText = formatRupiah(total)
   document.getElementById('cartCount').innerText = totalQty
@@ -271,7 +288,8 @@ function checkout(){
 
   cart.forEach(i=>{
     let sub = i.harga * i.qty
-    text += `• ${i.nama} x${i.qty} = ${formatRupiah(sub)}\n`
+    let mandarin = products.find(p => p.nama === i.nama)?.mandarin || ""
+    text += `• ${i.nama} (${mandarin}) x${i.qty} = ${formatRupiah(sub)}\n`
     total += sub
     totalQty += i.qty
   })
@@ -297,7 +315,6 @@ function scrollToCart(){
 window.onload = function(){ 
   renderProducts()
 }
-  
 </script>
 
 </body>
