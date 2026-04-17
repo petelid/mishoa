@@ -269,6 +269,19 @@ function renderCart(){
   document.getElementById('cartCount').innerText = totalQty
 }
 
+function generateOrderID() {
+  const now = new Date();
+
+  const year = now.getFullYear().toString().slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+
+  const shortTime = now.getTime().toString().slice(-6);
+  const random = Math.floor(1000 + Math.random() * 9000);
+
+  return `${year}${month}${day}-${shortTime}-${random}`;
+}
+  
 // CHECKOUT
 function checkout(){
   if(cart.length === 0){ alert("Keranjang kosong"); return }
@@ -277,7 +290,7 @@ function checkout(){
   let alamat = document.getElementById('alamat').value.trim()
   if(!nama||!alamat){ alert("Isi nama & alamat dulu"); return }
 
-  let orderId = new Date().getTime().toString().slice(-6)
+  let orderId = generateOrderID()
 
   let text = `🛒 *ORDER MISHOA.ID*\n`
   text += `📦 Order#${orderId}\n\n`
