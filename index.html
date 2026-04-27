@@ -271,19 +271,16 @@ function renderCart(){
 
 function generateOrderID() {
   const now = new Date();
-
   const year = now.getFullYear().toString().slice(-2);
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-
   const shortTime = now.getTime().toString().slice(-6);
   const random = Math.floor(1000 + Math.random() * 9000);
-
   return `${year}${month}${day}-${shortTime}-${random}`;
 }
   
 // CHECKOUT
-function checkout(){
+async function checkout(){
   if(cart.length === 0){ alert("Keranjang kosong"); return }
 
   let nama = document.getElementById('nama').value.trim()
@@ -292,57 +289,68 @@ function checkout(){
 
   let orderId = generateOrderID()
 
+  let total = 0
+  let totalQty = 0
+
+  cart.forEach(i=>{
+    total += i.harga * i.qty
+    totalQty += i.qty
+  })
+
+  let bonus = Math.floor(totalQty / 3)
+
+  // Susun teks WA
   let text = `🛒 *ORDER MISHOA.ID*\n`
   text += `📦 Order#${orderId}\n\n`
   text += `🍜 *Detail Pesanan:*\n`
-
-  let total = 0
-  let totalQty = 0
 
   cart.forEach(i=>{
     let sub = i.harga * i.qty
     let mandarin = products.find(p => p.nama === i.nama)?.mandarin || ""
     text += `• ${i.nama} (${mandarin}) x${i.qty} = ${formatRupiah(sub)}\n`
-    total += sub
-    totalQty += i.qty
   })
 
-  let bonus = Math.floor(totalQty / 3)
   if(bonus > 0){
     text += `\n🎁 *Bonus:*\n`
     text += `• Ayam Bawang x${bonus}\n`
   }
 
   text += `\n💰 Subtotal: ${formatRupiah(total)}\n`
-  text += `🚚 Ongkir: Rp0\n\n`
+  text += `🚚 Ongkir: (akan dikonfirmasi)\n\n`
   text += `👤 ${nama}\n`
   text += `📍 ${alamat}`
 
-  // Kirim data ke Make webhook
-const webhookData = {
-  order_id: orderId,
-  nama: nama,
-  alamat: alamat,
-  pesanan: cart.map(i => ({
-    menu: i.nama,
-    qty: i.qty,
-    harga: i.harga,
-    subtotal: i.harga * i.qty
-  })),
-  bonus: bonus,
-  subtotal: total,
-  ongkir: 0,
-  timestamp: new Date().toISOString()
-}
+  // Data untuk Make webhook
+  const webhookData = {
+    order_id: orderId,
+    nama: nama,
+    alamat: alamat,
+    pesanan: cart.map(i => ({
+      menu: i.nama,
+      qty: i.qty,
+      harga: i.harga,
+      subtotal: i.harga * i.qty
+    })),
+    bonus: bonus,
+    subtotal: total,
+    ongkir: 0,
+    timestamp: new Date().toISOString()
+  }
 
-fetch("https://hook.eu1.make.com/4owxs5cr31vyhsxr6bh9o4pc4exfska6", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(webhookData)
-}).catch(err => console.log("Webhook error:", err))
+  // Kirim ke webhook DULU, tunggu selesai, baru buka WA
+  try {
+    await fetch("https://hook.eu1.make.com/4owxs5cr31vyhsxr6bh9o4pc4exfska6", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(webhookData),
+      mode: "no-cors"
+    })
+  } catch(err) {
+    console.log("Webhook error:", err)
+  }
 
-// Tetap buka WA seperti biasa
-window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
+  // Buka WA setelah webhook selesai
+  window.open("https://wa.me/6282112007575?text=" + encodeURIComponent(text), "_blank")
 }
 
 function scrollToCart(){
