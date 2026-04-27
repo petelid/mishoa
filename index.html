@@ -299,6 +299,10 @@ async function checkout(){
 
   let bonus = Math.floor(totalQty / 3)
 
+  // Pesanan dalam format teks rapi
+  let pesananText = cart.map(i => `${i.nama} x${i.qty}`).join(", ")
+  if(bonus > 0) pesananText += `, Bonus: Ayam Bawang x${bonus}`
+
   // Susun teks WA
   let text = `🛒 *ORDER MISHOA.ID*\n`
   text += `📦 Order#${orderId}\n\n`
@@ -325,12 +329,7 @@ async function checkout(){
     order_id: orderId,
     nama: nama,
     alamat: alamat,
-    pesanan: cart.map(i => ({
-      menu: i.nama,
-      qty: i.qty,
-      harga: i.harga,
-      subtotal: i.harga * i.qty
-    })),
+    pesanan: pesananText,
     bonus: bonus,
     subtotal: total,
     ongkir: 0,
