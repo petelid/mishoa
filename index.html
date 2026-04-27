@@ -318,7 +318,31 @@ function checkout(){
   text += `👤 ${nama}\n`
   text += `📍 ${alamat}`
 
-  window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
+  // Kirim data ke Make webhook
+const webhookData = {
+  order_id: orderId,
+  nama: nama,
+  alamat: alamat,
+  pesanan: cart.map(i => ({
+    menu: i.nama,
+    qty: i.qty,
+    harga: i.harga,
+    subtotal: i.harga * i.qty
+  })),
+  bonus: bonus,
+  subtotal: total,
+  ongkir: 0,
+  timestamp: new Date().toISOString()
+}
+
+fetch("https://hook.eu1.make.com/4owxs5cr31vyhsxr6bh9o4pc4exfska6", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(webhookData)
+}).catch(err => console.log("Webhook error:", err))
+
+// Tetap buka WA seperti biasa
+window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
 }
 
 function scrollToCart(){
