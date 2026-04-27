@@ -339,7 +339,7 @@ async function checkout(){
 
   // Kirim ke webhook DULU, tunggu selesai, baru buka WA
   try {
-    await fetch("https://hook.eu1.make.com/4owxs5cr31vyhsxr6bh9o4pc4exfska6", {
+    await fetch("https://script.google.com/macros/s/AKfycbzLJUb5yvRARb_KX4PJT66TQfQdWHurA2m_zf8Ij19F1q9yoD7tj-jxjvTvwC8Bdxuy/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(webhookData),
