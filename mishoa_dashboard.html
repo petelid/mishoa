@@ -7,8 +7,6 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -72,9 +70,8 @@
   .form-input:focus { outline: none; border-color: #E8590C; }
 
   /* MAP */
-  #javaMap { width: 100%; height: 480px; border-radius: 10px; background: #1a1a2e; display: block; }
-  .leaflet-container { width: 100% !important; height: 100% !important; border-radius: 10px; }
-  .mishoa-marker-label { background: rgba(13,13,13,0.85); border: 1px solid #333; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #f0f0f0; white-space: nowrap; font-family: 'Inter', sans-serif; }
+  #javaMap { width: 100%; height: 480px; border-radius: 10px; background: #0a1628; position: relative; overflow: hidden; }
+  .city-tooltip { position: absolute; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 10; display: none; min-width: 160px; }
   .city-tooltip { position: absolute; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 10; display: none; min-width: 160px; }
 
   /* LOADING */
@@ -294,8 +291,8 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
           <div style="font-size:13px;font-weight:500;">Peta Pengiriman — Indonesia</div>
           <div style="display:flex;gap:8px;">
-            <button onclick="leafletMap&&leafletMap.setView([-2.5,118],5)" class="btn btn-ghost btn-sm">🗺️ Reset View</button>
-            <button onclick="leafletMap&&leafletMap.setView([-7.5,110],8)" class="btn btn-ghost btn-sm">☕ Fokus Jawa</button>
+            <button onclick="renderMapTab()" class="btn btn-ghost btn-sm">🗺️ Reset View</button>
+            <button onclick="focusJawa()" class="btn btn-ghost btn-sm">☕ Fokus Jawa</button>
           </div>
         </div>
         <div style="font-size:11px;color:#666;margin-bottom:12px;">Klik titik kota untuk detail. Scroll/pinch untuk zoom. Drag untuk geser.</div>
@@ -882,96 +879,130 @@ function renderProductTab() {
 // ================================================================
 //  MAP TAB
 // ================================================================
-let leafletMap = null;
-let leafletMarkers = [];
+let mapMode = 'indonesia'; // 'indonesia' | 'jawa'
+function focusJawa(){ mapMode='jawa'; renderMapTab(); }
 
 function renderMapTab() {
   const bk = summaryData.byKota || {};
   const sorted = CITIES.slice().sort((a,b)=>(bk[b]?.orders||0)-(bk[a]?.orders||0));
   const maxO = Math.max(...CITIES.map(c=>bk[c]?.orders||0), 1);
 
-  const cityLatLng = {
-    'Jakarta':    [-6.21,  106.85], 'Bekasi':     [-6.24,  106.99],
-    'Bogor':      [-6.60,  106.80], 'Bandung':    [-6.91,  107.61],
-    'Cirebon':    [-6.73,  108.55], 'Semarang':   [-6.99,  110.42],
-    'Yogyakarta': [-7.80,  110.37], 'Solo':       [-7.57,  110.83],
-    'Surabaya':   [-7.25,  112.75], 'Malang':     [-7.98,  112.63],
-    'Medan':      [3.59,    98.67], 'Palembang':  [-2.99,  104.75],
-    'Makassar':   [-5.14,  119.43], 'Denpasar':   [-8.65,  115.22],
-    'Balikpapan': [-1.27,  116.83], 'Manado':     [1.49,   124.84],
-    'Pontianak':  [-0.03,  109.33], 'Pekanbaru':  [0.53,   101.45],
+  // Posisi kota dalam koordinat persentase (x%, y%) dari viewBox 1000x520
+  // Disesuaikan manual dengan bentuk kepulauan Indonesia
+  const cityPos = {
+    // Sumatera
+    'Medan':      [148, 88],  'Pekanbaru':  [168, 165], 'Padang':     [155, 195],
+    'Palembang':  [212, 228], 'Lampung':    [225, 270], 'Batam':      [205, 175],
+    // Jawa
+    'Jakarta':    [262, 292], 'Bekasi':     [272, 290], 'Bogor':      [265, 305],
+    'Bandung':    [280, 310], 'Cirebon':    [300, 298], 'Semarang':   [330, 285],
+    'Yogyakarta': [328, 305], 'Solo':       [338, 298], 'Surabaya':   [368, 280],
+    'Malang':     [372, 298], 'Denpasar':   [388, 305],
+    // Kalimantan
+    'Pontianak':  [322, 210], 'Banjarmasin':[378, 248], 'Balikpapan': [400, 228],
+    'Samarinda':  [408, 215], 'Palangkaraya':[368, 232],
+    // Sulawesi
+    'Makassar':   [430, 280], 'Palu':       [432, 228], 'Manado':     [472, 198],
+    'Kendari':    [450, 288], 'Gorontalo':  [460, 212],
+    // Maluku & Papua
+    'Ambon':      [520, 288], 'Ternate':    [498, 215],
+    'Jayapura':   [620, 258], 'Sorong':     [550, 258],
   };
 
-  // Destroy map lama kalau ada
-  if (leafletMap) {
-    leafletMap.remove();
-    leafletMap = null;
-    leafletMarkers = [];
-  }
-
-  // Reset container
   const container = document.getElementById('javaMap');
-  container.innerHTML = '';
+  container.innerHTML = '<div class="city-tooltip" id="cityTooltip"></div>';
+  const tt = document.getElementById('cityTooltip');
+  const W = container.clientWidth || 900;
+  const H = 480;
 
-  // Init Leaflet baru
-  leafletMap = L.map('javaMap', {
-    center: [-2.5, 118],
-    zoom: 5,
-    zoomControl: true,
-    scrollWheelZoom: true
+  const svg = d3.select('#javaMap').append('svg')
+    .attr('width', '100%').attr('height', H)
+    .attr('viewBox', `0 0 700 440`);
+
+  // Background laut
+  svg.append('rect').attr('width', 700).attr('height', 440).attr('fill', '#0a1628').attr('rx', 10);
+
+  // Gambar pulau-pulau Indonesia dengan path SVG yang akurat
+  const islands = [
+    // Sumatera
+    { d: 'M100,60 L115,50 L135,52 L155,58 L168,70 L178,88 L185,108 L188,128 L185,155 L178,178 L168,198 L155,218 L140,232 L125,240 L112,238 L102,228 L95,210 L90,188 L88,165 L90,138 L95,112 L100,90 Z', fill: '#1a3a1a' },
+    // Jawa
+    { d: 'M238,278 L252,270 L270,268 L290,270 L310,272 L330,270 L352,268 L372,268 L392,272 L405,278 L408,288 L400,298 L382,305 L358,308 L332,310 L308,308 L285,308 L262,305 L245,300 L238,290 Z', fill: '#1a3a1a' },
+    // Kalimantan
+    { d: 'M285,175 L305,162 L328,158 L355,158 L378,162 L398,172 L415,188 L425,208 L428,230 L422,252 L410,268 L392,278 L370,282 L345,280 L320,272 L300,258 L285,240 L278,218 L278,198 Z', fill: '#1a3a1a' },
+    // Sulawesi (simplified)
+    { d: 'M418,195 L430,188 L445,190 L455,200 L460,218 L455,235 L445,248 L435,255 L425,250 L418,238 L415,220 Z', fill: '#1a3a1a' },
+    { d: 'M440,248 L452,245 L462,252 L468,265 L462,278 L450,285 L440,280 L435,268 Z', fill: '#1a3a1a' },
+    { d: 'M455,195 L470,188 L482,192 L488,205 L485,218 L475,225 L462,222 L455,210 Z', fill: '#1a3a1a' },
+    // Papua
+    { d: 'M535,238 L558,228 L582,225 L605,228 L625,235 L640,248 L645,265 L638,280 L622,290 L600,295 L575,292 L552,285 L538,272 L532,255 Z', fill: '#1a3a1a' },
+    // Maluku kecil
+    { d: 'M498,272 L508,268 L515,275 L512,285 L502,288 L495,282 Z', fill: '#1a3a1a' },
+    // Bali
+    { d: 'M390,298 L400,295 L405,302 L400,308 L390,308 Z', fill: '#1a3a1a' },
+    // Lombok
+    { d: 'M408,298 L416,295 L420,302 L416,308 L408,308 Z', fill: '#1a3a1a' },
+    // NTT simplified
+    { d: 'M425,305 L460,298 L475,305 L468,315 L445,318 L425,315 Z', fill: '#1a3a1a' },
+  ];
+
+  // Render pulau
+  islands.forEach(isl => {
+    svg.append('path').attr('d', isl.d).attr('fill', isl.fill).attr('stroke', '#2a4a2a').attr('stroke-width', 0.8);
   });
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 18
-  }).addTo(leafletMap);
+  // Garis rute pengiriman antar kota utama
+  const routes = [
+    ['Jakarta','Surabaya'],['Jakarta','Bandung'],['Surabaya','Denpasar'],
+    ['Jakarta','Palembang'],['Palembang','Medan'],['Surabaya','Makassar'],
+    ['Makassar','Manado'],['Makassar','Ambon'],['Balikpapan','Makassar'],
+    ['Pontianak','Balikpapan'],['Jakarta','Pontianak'],
+  ];
 
-  // Tambah marker per kota
-  Object.entries(cityLatLng).forEach(([city, [lat, lng]]) => {
-    const stat = bk[city] || { orders: 0, omset: 0 };
-    const r = Math.max(10, Math.min(34, 10 + (stat.orders / maxO) * 26));
-    const col = stat.orders > 30 ? '#E8590C' : stat.orders >= 10 ? '#EF9F27' : '#2D9D78';
-    const pulse = stat.orders >= 10 ? `box-shadow:0 0 0 4px ${col}44;` : '';
-
-    const icon = L.divIcon({
-      className: '',
-      html: `<div style="
-        width:${r*2}px;height:${r*2}px;border-radius:50%;
-        background:${col};opacity:0.9;
-        border:2px solid rgba(255,255,255,0.3);
-        display:flex;align-items:center;justify-content:center;
-        color:#fff;font-size:${r>14?'10':'8'}px;font-weight:700;
-        font-family:Inter,sans-serif;cursor:pointer;
-        ${pulse}
-        margin-left:-${r}px;margin-top:-${r}px;
-      ">${stat.orders > 0 ? stat.orders : ''}</div>`,
-      iconSize: [r*2, r*2],
-      iconAnchor: [r, r],
-    });
-
-    const marker = L.marker([lat, lng], { icon })
-      .addTo(leafletMap)
-      .bindPopup(`
-        <div style="font-family:Inter,sans-serif;min-width:160px;">
-          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">📍 ${city}</div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-            <span style="color:#666;">Total Order</span><span style="font-weight:600;">${stat.orders}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-            <span style="color:#666;">Omset</span><span style="font-weight:600;">${fmtRp(stat.omset)}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:#666;">Status</span>
-            <span style="color:${col};font-weight:500;">${stat.orders>30?'🔥 Tinggi':stat.orders>=10?'📈 Sedang':'📊 Rendah'}</span>
-          </div>
-        </div>
-      `, { maxWidth: 220 });
-
-    leafletMarkers.push(marker);
+  routes.forEach(([a,b]) => {
+    const pa = cityPos[a], pb = cityPos[b];
+    if(!pa||!pb) return;
+    svg.append('line')
+      .attr('x1',pa[0]).attr('y1',pa[1]).attr('x2',pb[0]).attr('y2',pb[1])
+      .attr('stroke','rgba(232,89,12,0.15)').attr('stroke-width',1)
+      .attr('stroke-dasharray','3,4');
   });
 
-  // Single invalidateSize setelah render selesai
-  setTimeout(() => leafletMap.invalidateSize(false), 200);
+  // Titik kota
+  Object.entries(cityPos).forEach(([city, [cx, cy]]) => {
+    const stat = bk[city] || { orders:0, omset:0 };
+    const r = Math.max(6, Math.min(22, 6 + (stat.orders/maxO)*17));
+    const col = stat.orders>30?'#E8590C':stat.orders>=10?'#EF9F27':'#2D9D78';
+    const g = svg.append('g').attr('cursor','pointer');
+
+    if(stat.orders >= 10){
+      g.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r+5)
+        .attr('fill','none').attr('stroke',col).attr('stroke-width',1).attr('opacity',0.3);
+    }
+    g.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r)
+      .attr('fill',col).attr('opacity',0.9).attr('stroke','rgba(255,255,255,0.2)').attr('stroke-width',1.2);
+    if(stat.orders>0){
+      g.append('text').attr('x',cx).attr('y',cy).attr('text-anchor','middle')
+        .attr('dominant-baseline','middle').attr('fill','#fff')
+        .attr('font-size',r>10?'9':'7').attr('font-weight','700').text(stat.orders);
+    }
+    g.append('text').attr('x',cx).attr('y',cy-r-5)
+      .attr('text-anchor','middle').attr('fill','#bbb').attr('font-size','8').attr('font-weight','500')
+      .text(city);
+
+    g.on('mousemove', ev => {
+      const rect = container.getBoundingClientRect();
+      tt.style.display = 'block';
+      tt.style.left = Math.min(ev.clientX-rect.left+12, W-170)+'px';
+      tt.style.top = (ev.clientY-rect.top-10)+'px';
+      tt.innerHTML = `<div style="font-weight:600;color:#f0f0f0;margin-bottom:6px;">📍 ${city}</div>
+        <div style="color:#888;display:flex;justify-content:space-between;gap:16px;"><span>Order</span><span style="color:#f0f0f0;font-weight:500;">${stat.orders}</span></div>
+        <div style="color:#888;display:flex;justify-content:space-between;gap:16px;margin-top:3px;"><span>Omset</span><span style="color:#f0f0f0;font-weight:500;">${fmtRp(stat.omset)}</span></div>
+        <div style="color:#888;display:flex;justify-content:space-between;gap:16px;margin-top:3px;"><span>Status</span><span style="color:${col};font-weight:500;">${stat.orders>30?'🔥 Tinggi':stat.orders>=10?'📈 Sedang':'📊 Rendah'}</span></div>`;
+    }).on('mouseleave', () => tt.style.display='none');
+  });
+
+  svg.append('text').attr('x',12).attr('y',18).attr('font-size',9).attr('fill','#444').text('© Mishoa.id — Peta Distribusi Indonesia');
 
   destroyChart(moChart);
   moChart = new Chart(document.getElementById('mapOrderChart'),{
