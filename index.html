@@ -65,31 +65,22 @@ img {
 
   <input id="nama" placeholder="Nama" class="bg-white/30 border border-white/20 p-3 w-full mt-3 rounded-xl text-black">
   <input id="no_hp" placeholder="No. HP / WhatsApp (cth: 08123456789)" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
-  <select id="kota" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
-    <option value="">-- Pilih Kota --</option>
-    <optgroup label="Jawa">
-      <option>Jakarta</option><option>Bekasi</option><option>Bogor</option><option>Depok</option>
-      <option>Tangerang</option><option>Bandung</option><option>Cirebon</option>
-      <option>Semarang</option><option>Yogyakarta</option><option>Solo</option>
-      <option>Surabaya</option><option>Malang</option>
-    </optgroup>
-    <optgroup label="Sumatera">
-      <option>Medan</option><option>Palembang</option><option>Pekanbaru</option>
-      <option>Padang</option><option>Banda Aceh</option><option>Lampung</option>
-    </optgroup>
-    <optgroup label="Kalimantan">
-      <option>Balikpapan</option><option>Pontianak</option><option>Banjarmasin</option><option>Samarinda</option>
-    </optgroup>
-    <optgroup label="Sulawesi">
-      <option>Makassar</option><option>Manado</option><option>Palu</option><option>Kendari</option>
-    </optgroup>
-    <optgroup label="Bali & NTT">
-      <option>Denpasar</option><option>Mataram</option><option>Kupang</option>
-    </optgroup>
-    <optgroup label="Papua & Maluku">
-      <option>Jayapura</option><option>Ambon</option><option>Sorong</option>
-    </optgroup>
-  </select>
+
+  <!-- Custom Kota Dropdown -->
+  <div id="kotaWrapper" style="position:relative;margin-top:8px;">
+    <div id="kotaDisplay" onclick="toggleKotaDropdown()"
+      style="background:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.2);padding:12px 16px;border-radius:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:#000;">
+      <span id="kotaLabel" style="color:#555;">-- Pilih Kota --</span>
+      <span id="kotaArrow" style="font-size:12px;color:#888;">▼</span>
+    </div>
+    <div id="kotaDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#1a1a1a;border:1px solid rgba(255,255,255,0.15);border-radius:12px;z-index:999;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+      <input id="kotaSearch" oninput="filterKota(this.value)" placeholder="🔍 Cari kota..." 
+        style="width:100%;padding:10px 14px;background:#222;border:none;border-bottom:1px solid #333;color:#fff;font-size:13px;border-radius:12px 12px 0 0;outline:none;">
+      <div id="kotaList"></div>
+    </div>
+  </div>
+  <input type="hidden" id="kota">
+
   <input id="alamat" placeholder="Alamat lengkap (Jl., RT/RW, Kecamatan)" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
 
   <h3 class="mt-4 font-bold text-lg">Total: <span id="total">Rp0</span></h3>
@@ -391,8 +382,66 @@ function scrollToCart(){
   document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})
 }
 
-window.onload = function(){ 
+// ---- KOTA DROPDOWN ----
+const KOTA_DATA = {
+  '☕ Jawa':       ['Jakarta','Bekasi','Bogor','Depok','Tangerang','Bandung','Cirebon','Semarang','Yogyakarta','Solo','Surabaya','Malang'],
+  '🌴 Sumatera':   ['Medan','Palembang','Pekanbaru','Padang','Banda Aceh','Lampung','Batam'],
+  '🌿 Kalimantan': ['Balikpapan','Pontianak','Banjarmasin','Samarinda','Palangkaraya'],
+  '🌺 Sulawesi':   ['Makassar','Manado','Palu','Kendari','Gorontalo'],
+  '🏝️ Bali & NTT': ['Denpasar','Mataram','Kupang'],
+  '🦅 Papua & Maluku': ['Jayapura','Ambon','Sorong','Ternate'],
+}
+
+function buildKotaList(filter='') {
+  let html = ''
+  Object.entries(KOTA_DATA).forEach(([group, cities]) => {
+    const filtered = cities.filter(c => c.toLowerCase().includes(filter.toLowerCase()))
+    if(!filtered.length) return
+    html += `<div style="padding:6px 14px 2px;font-size:10px;color:#E8590C;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">${group}</div>`
+    filtered.forEach(city => {
+      html += `<div onclick="selectKota('${city}')" style="padding:10px 16px;font-size:14px;color:#f0f0f0;cursor:pointer;transition:background 0.1s;"
+        onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background='transparent'">${city}</div>`
+    })
+  })
+  if(!html) html = '<div style="padding:16px;color:#666;text-align:center;font-size:13px;">Kota tidak ditemukan</div>'
+  document.getElementById('kotaList').innerHTML = html
+}
+
+function toggleKotaDropdown() {
+  const dd = document.getElementById('kotaDropdown')
+  const arrow = document.getElementById('kotaArrow')
+  const isOpen = dd.style.display !== 'none'
+  dd.style.display = isOpen ? 'none' : 'block'
+  arrow.textContent = isOpen ? '▼' : '▲'
+  if(!isOpen) {
+    document.getElementById('kotaSearch').value = ''
+    buildKotaList()
+    setTimeout(()=>document.getElementById('kotaSearch').focus(), 50)
+  }
+}
+
+function selectKota(city) {
+  document.getElementById('kota').value = city
+  document.getElementById('kotaLabel').textContent = city
+  document.getElementById('kotaLabel').style.color = '#000'
+  document.getElementById('kotaDropdown').style.display = 'none'
+  document.getElementById('kotaArrow').textContent = '▼'
+}
+
+function filterKota(val) { buildKotaList(val) }
+
+// Tutup dropdown kalau klik di luar
+document.addEventListener('click', function(e) {
+  const wrapper = document.getElementById('kotaWrapper')
+  if(wrapper && !wrapper.contains(e.target)) {
+    document.getElementById('kotaDropdown').style.display = 'none'
+    document.getElementById('kotaArrow').textContent = '▼'
+  }
+})
+
+window.onload = function(){
   renderProducts()
+  buildKotaList()
 }
 </script>
 
