@@ -72,8 +72,9 @@
   .form-input:focus { outline: none; border-color: #E8590C; }
 
   /* MAP */
-  #javaMap { width: 100%; height: 480px; position: relative; overflow: hidden; border-radius: 10px; }
-  .leaflet-container { border-radius: 10px; }
+  #javaMap { width: 100%; height: 480px; position: relative; border-radius: 10px; background: #1a1a2e; }
+  .leaflet-container { border-radius: 10px; background: #1a1a2e !important; }
+  .leaflet-tile-pane { opacity: 1; }
   .mishoa-marker-label { background: rgba(13,13,13,0.85); border: 1px solid #333; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #f0f0f0; white-space: nowrap; font-family: 'Inter', sans-serif; }
   .city-tooltip { position: absolute; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 10; display: none; min-width: 160px; }
 
@@ -911,10 +912,9 @@ function renderMapTab() {
       scrollWheelZoom: true
     });
 
-    // Dark tile layer dari CartoDB
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap © CartoDB',
-      subdomains: 'abcd',
+    // OpenStreetMap standard - paling reliable
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
       maxZoom: 18,
       crossOrigin: true
     }).addTo(leafletMap);
@@ -971,7 +971,9 @@ function renderMapTab() {
   });
 
   // Refresh ukuran map (kalau baru pertama tampil)
-  setTimeout(() => leafletMap.invalidateSize(), 100);
+  setTimeout(() => { leafletMap.invalidateSize(); }, 100);
+  setTimeout(() => { leafletMap.invalidateSize(); }, 500);
+  setTimeout(() => { leafletMap.invalidateSize(); }, 1000);
 
   destroyChart(moChart);
   moChart = new Chart(document.getElementById('mapOrderChart'),{
