@@ -64,7 +64,33 @@ img {
   <div id="cart"></div>
 
   <input id="nama" placeholder="Nama" class="bg-white/30 border border-white/20 p-3 w-full mt-3 rounded-xl text-black">
-  <input id="alamat" placeholder="Alamat" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
+  <input id="no_hp" placeholder="No. HP / WhatsApp (cth: 08123456789)" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
+  <select id="kota" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
+    <option value="">-- Pilih Kota --</option>
+    <optgroup label="Jawa">
+      <option>Jakarta</option><option>Bekasi</option><option>Bogor</option><option>Depok</option>
+      <option>Tangerang</option><option>Bandung</option><option>Cirebon</option>
+      <option>Semarang</option><option>Yogyakarta</option><option>Solo</option>
+      <option>Surabaya</option><option>Malang</option>
+    </optgroup>
+    <optgroup label="Sumatera">
+      <option>Medan</option><option>Palembang</option><option>Pekanbaru</option>
+      <option>Padang</option><option>Banda Aceh</option><option>Lampung</option>
+    </optgroup>
+    <optgroup label="Kalimantan">
+      <option>Balikpapan</option><option>Pontianak</option><option>Banjarmasin</option><option>Samarinda</option>
+    </optgroup>
+    <optgroup label="Sulawesi">
+      <option>Makassar</option><option>Manado</option><option>Palu</option><option>Kendari</option>
+    </optgroup>
+    <optgroup label="Bali & NTT">
+      <option>Denpasar</option><option>Mataram</option><option>Kupang</option>
+    </optgroup>
+    <optgroup label="Papua & Maluku">
+      <option>Jayapura</option><option>Ambon</option><option>Sorong</option>
+    </optgroup>
+  </select>
+  <input id="alamat" placeholder="Alamat lengkap (Jl., RT/RW, Kecamatan)" class="bg-white/30 border border-white/20 p-3 w-full mt-2 rounded-xl text-black">
 
   <h3 class="mt-4 font-bold text-lg">Total: <span id="total">Rp0</span></h3>
 
@@ -283,9 +309,14 @@ function generateOrderID() {
 async function checkout(){
   if(cart.length === 0){ alert("Keranjang kosong"); return }
 
-  let nama = document.getElementById('nama').value.trim()
+  let nama   = document.getElementById('nama').value.trim()
+  let no_hp  = document.getElementById('no_hp').value.trim()
+  let kota   = document.getElementById('kota').value.trim()
   let alamat = document.getElementById('alamat').value.trim()
-  if(!nama||!alamat){ alert("Isi nama & alamat dulu"); return }
+
+  if(!nama)   { alert("Isi nama dulu"); return }
+  if(!kota)   { alert("Pilih kota dulu"); return }
+  if(!alamat) { alert("Isi alamat dulu"); return }
 
   let orderId = generateOrderID()
 
@@ -322,17 +353,21 @@ async function checkout(){
   text += `\n💰 Subtotal: ${formatRupiah(total)}\n`
   text += `🚚 Ongkir: (akan dikonfirmasi)\n\n`
   text += `👤 ${nama}\n`
+  if(no_hp) text += `📱 ${no_hp}\n`
+  text += `🏙️ ${kota}\n`
   text += `📍 ${alamat}`
 
-  // Data untuk Make webhook
+  // Data untuk webhook
   const webhookData = {
-    order_id: orderId,
-    nama: nama,
-    alamat: alamat,
-    pesanan: pesananText,
-    bonus: bonus,
-    subtotal: total,
-    ongkir: 0,
+    order_id:  orderId,
+    nama:      nama,
+    no_hp:     no_hp,
+    kota:      kota,
+    alamat:    alamat,
+    pesanan:   pesananText,
+    bonus:     bonus,
+    subtotal:  total,
+    ongkir:    0,
     timestamp: new Date().toISOString()
   }
 
