@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mishoa.id — Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0d0d0d; color: #f0f0f0; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #1a1a1a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+  /* LAYOUT */
+  .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 220px; background: #111; border-right: 1px solid #222; z-index: 40; display: flex; flex-direction: column; }
+  .main { margin-left: 220px; min-height: 100vh; }
+  @media(max-width:768px){ .sidebar{display:none;} .main{margin-left:0;} }
+
+  /* NAV */
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #999; transition: all 0.15s; margin: 2px 8px; }
+  .nav-item:hover { background: #1a1a1a; color: #f0f0f0; }
+  .nav-item.active { background: #1f1f1f; color: #f0f0f0; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* CARDS */
+  .card { background: #161616; border: 1px solid #222; border-radius: 12px; }
+  .kpi-card { background: #161616; border: 1px solid #222; border-radius: 10px; padding: 16px; }
+  .kpi-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .kpi-value { font-size: 24px; font-weight: 600; line-height: 1; }
+  .kpi-sub { font-size: 11px; margin-top: 5px; }
+  .up { color: #4ade80; } .down { color: #f87171; } .neutral { color: #999; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; font-weight: 500; color: #666; padding: 10px 14px; border-bottom: 1px solid #222; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+  td { padding: 12px 14px; border-bottom: 1px solid #1a1a1a; color: #d0d0d0; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #1a1a1a; }
+
+  /* PILLS */
+  .pill { font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 500; display: inline-block; white-space: nowrap; }
+  .pill-done    { background: #052e16; color: #4ade80; }
+  .pill-proc    { background: #1c1917; color: #fbbf24; }
+  .pill-ship    { background: #0c1a2e; color: #60a5fa; }
+  .pill-cancel  { background: #1f0909; color: #f87171; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; }
+  .btn-primary { background: #E8590C; color: #fff; }
+  .btn-primary:hover { background: #c94d09; }
+  .btn-ghost { background: transparent; color: #999; border: 1px solid #333; }
+  .btn-ghost:hover { background: #1a1a1a; color: #f0f0f0; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
+
+  /* TABS */
+  .range-btn { padding: 5px 12px; font-size: 12px; border-radius: 6px; border: 1px solid #333; background: transparent; color: #999; cursor: pointer; transition: all 0.15s; }
+  .range-btn.active { background: #1f1f1f; color: #f0f0f0; border-color: #444; }
+
+  /* PROGRESS */
+  .progress-bg { background: #222; border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 99; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-box { background: #161616; border: 1px solid #333; border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; }
+  .form-label { display: block; font-size: 11px; color: #777; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-input { width: 100%; background: #0d0d0d; border: 1px solid #333; border-radius: 8px; padding: 9px 12px; color: #f0f0f0; font-size: 13px; font-family: 'Inter', sans-serif; }
+  .form-input:focus { outline: none; border-color: #E8590C; }
+
+  /* MAP */
+  #javaMap { width: 100%; height: 480px; position: relative; overflow: hidden; border-radius: 10px; }
+  .leaflet-container { border-radius: 10px; }
+  .mishoa-marker-label { background: rgba(13,13,13,0.85); border: 1px solid #333; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #f0f0f0; white-space: nowrap; font-family: 'Inter', sans-serif; }
+  .city-tooltip { position: absolute; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 10; display: none; min-width: 160px; }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: #555; font-size: 13px; gap: 10px; }
+  .spinner { width: 20px; height: 20px; border: 2px solid #333; border-top-color: #E8590C; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SECTIONS */
+  .section { display: none; } .section.active { display: block; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 12px 18px; font-size: 13px; z-index: 200; opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* PIN LOCK */
+  #pinOverlay { position: fixed; inset: 0; background: #0d0d0d; z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .pin-box { background: #161616; border: 1px solid #222; border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 320px; text-align: center; }
+  .pin-logo { font-size: 36px; margin-bottom: 8px; }
+  .pin-title { font-size: 18px; font-weight: 600; color: #f0f0f0; margin-bottom: 4px; }
+  .pin-sub { font-size: 12px; color: #555; margin-bottom: 28px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #333; background: transparent; transition: all 0.15s; }
+  .pin-dot.filled { background: #E8590C; border-color: #E8590C; }
+  .pin-dot.error { background: #f87171; border-color: #f87171; animation: shake 0.3s; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pin-btn { background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; font-size: 18px; font-weight: 500; color: #f0f0f0; cursor: pointer; transition: all 0.1s; user-select: none; }
+  .pin-btn:hover { background: #2a2a2a; }
+  .pin-btn:active { transform: scale(0.94); background: #333; }
+  .pin-btn.del { font-size: 14px; color: #888; }
+  .pin-error { font-size: 12px; color: #f87171; margin-top: 16px; min-height: 18px; }
+  .pin-change { font-size: 11px; color: #555; margin-top: 20px; cursor: pointer; text-decoration: underline; }
+  .pin-change:hover { color: #888; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+</style>
+</head>
+<body>
+
+<!-- ===================== PIN LOCK ===================== -->
+<div id="pinOverlay">
+  <div class="pin-box">
+    <div class="pin-logo">🍜</div>
+    <div class="pin-title">Mishoa.id Dashboard</div>
+    <div class="pin-sub" id="pinSubText">Masukkan PIN untuk masuk</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+      <div class="pin-dot" id="d4"></div>
+      <div class="pin-dot" id="d5"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinInput('1')">1</button>
+      <button class="pin-btn" onclick="pinInput('2')">2</button>
+      <button class="pin-btn" onclick="pinInput('3')">3</button>
+      <button class="pin-btn" onclick="pinInput('4')">4</button>
+      <button class="pin-btn" onclick="pinInput('5')">5</button>
+      <button class="pin-btn" onclick="pinInput('6')">6</button>
+      <button class="pin-btn" onclick="pinInput('7')">7</button>
+      <button class="pin-btn" onclick="pinInput('8')">8</button>
+      <button class="pin-btn" onclick="pinInput('9')">9</button>
+      <button class="pin-btn" onclick="pinInput('0')" style="grid-column:2;">0</button>
+      <button class="pin-btn del" onclick="pinDelete()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-change" onclick="showChangePin()" id="pinChangeLink">Ubah PIN</div>
+  </div>
+</div>
+
+<!-- ===================== SIDEBAR ===================== -->
+<div class="sidebar">
+  <div style="padding:20px 16px 12px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #222;">
+    <span style="font-size:22px;">🍜</span>
+    <div>
+      <div style="font-size:14px; font-weight:600;">Mishoa.id</div>
+      <div style="font-size:10px; color:#555;">Admin Dashboard</div>
+    </div>
+  </div>
+
+  <nav style="padding:12px 0; flex:1;">
+    <div class="nav-item active" onclick="showSection('overview',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Ringkasan
+    </div>
+    <div class="nav-item" onclick="showSection('orders',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Pesanan
+    </div>
+    <div class="nav-item" onclick="showSection('products',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>
+      Produk
+    </div>
+    <div class="nav-item" onclick="showSection('map',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+      Peta Jawa
+    </div>
+    <div class="nav-item" onclick="showSection('settings',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Pengaturan
+    </div>
+  </nav>
+
+  <div style="padding:14px 16px; border-top:1px solid #222;">
+    <div style="font-size:11px; color:#555; margin-bottom:6px;">Koneksi Sheet</div>
+    <div id="connStatus" style="font-size:11px; color:#fbbf24; display:flex; align-items:center; gap:5px;">
+      <span style="width:7px;height:7px;background:#fbbf24;border-radius:50%;display:inline-block;"></span> Belum terhubung
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MAIN ===================== -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div style="position:sticky;top:0;z-index:30;background:#0d0d0d;border-bottom:1px solid #1a1a1a;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;gap:6px;" id="rangeButtons">
+      <button class="range-btn active" onclick="setRange(this,'7d')">7 Hari</button>
+      <button class="range-btn" onclick="setRange(this,'30d')">30 Hari</button>
+      <button class="range-btn" onclick="setRange(this,'90d')">3 Bulan</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost btn-sm" onclick="refreshData()" id="refreshBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="showAddModal()">+ Order Baru</button>
+    </div>
+  </div>
+
+  <div style="padding:24px;">
+
+    <!-- OVERVIEW -->
+    <div id="section-overview" class="section active">
+      <div id="kpiGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px;"></div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;">
+        <div class="card p-5" style="padding:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div style="font-size:13px;font-weight:500;">Omset Harian</div>
+            <div id="revenueTotal" style="font-size:11px;color:#666;"></div>
+          </div>
+          <div style="position:relative;height:200px;"><canvas id="revenueChart" role="img" aria-label="Grafik omset harian">Omset harian Mishoa.</canvas></div>
+        </div>
+        <div class="card" style="padding:18px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:16px;">Produk Terlaris</div>
+          <div style="position:relative;height:180px;"><canvas id="productChart" role="img" aria-label="Produk terlaris">Produk terlaris.</canvas></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div class="card" style="padding:18px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:16px;">Order per Kota</div>
+          <div style="position:relative;height:200px;"><canvas id="cityChart" role="img" aria-label="Order per kota">Order per kota.</canvas></div>
+        </div>
+        <div class="card" style="padding:18px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Target Periode</div>
+          <div id="targetSection"></div>
+          <div style="margin-top:20px;font-size:13px;font-weight:500;margin-bottom:8px;">Status Order</div>
+          <div style="position:relative;height:120px;"><canvas id="statusChart" role="img" aria-label="Status order">Status order.</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="section-orders" class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:15px;font-weight:500;">Daftar Pesanan</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="filterStatus" onchange="applyFilters()" style="background:#161616;border:1px solid #333;border-radius:7px;padding:6px 10px;color:#d0d0d0;font-size:12px;">
+            <option value="">Semua Status</option>
+            <option>Selesai</option><option>Dikirim</option><option>Diproses</option><option>Dibatalkan</option>
+          </select>
+          <select id="filterKota" onchange="applyFilters()" style="background:#161616;border:1px solid #333;border-radius:7px;padding:6px 10px;color:#d0d0d0;font-size:12px;">
+            <option value="">Semua Kota</option>
+            <option>Jakarta</option><option>Bekasi</option><option>Bogor</option><option>Bandung</option>
+            <option>Yogyakarta</option><option>Surabaya</option><option>Semarang</option><option>Cirebon</option><option>Solo</option><option>Malang</option>
+            <option>Medan</option><option>Palembang</option><option>Pekanbaru</option>
+            <option>Makassar</option><option>Denpasar</option><option>Balikpapan</option><option>Pontianak</option><option>Manado</option>
+          </select>
+          <input id="searchOrder" oninput="applyFilters()" placeholder="Cari nama / order ID..." style="background:#161616;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#d0d0d0;font-size:12px;width:200px;">
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <div id="orderTableWrap">
+          <div class="loading"><div class="spinner"></div> Memuat pesanan...</div>
+        </div>
+      </div>
+      <div id="orderPagination" style="display:flex;justify-content:center;gap:8px;margin-top:16px;"></div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="section-products" class="section">
+      <div id="productKpiGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:20px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div class="card" style="padding:18px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:16px;">Omset per Produk</div>
+          <div style="position:relative;height:200px;"><canvas id="perfOmsetChart" role="img" aria-label="Omset per produk">Omset produk.</canvas></div>
+        </div>
+        <div class="card" style="padding:18px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:16px;">Qty Terjual per Produk</div>
+          <div style="position:relative;height:200px;"><canvas id="perfQtyChart" role="img" aria-label="Qty terjual per produk">Qty produk.</canvas></div>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <table>
+          <thead><tr>
+            <th>Produk</th><th>Terjual</th><th>Omset</th><th>Bonus Keluar</th><th>% Share</th>
+          </tr></thead>
+          <tbody id="productBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div id="section-map" class="section">
+      <div class="card" style="padding:18px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+          <div style="font-size:13px;font-weight:500;">Peta Pengiriman — Indonesia</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="leafletMap&&leafletMap.setView([-2.5,118],5)" class="btn btn-ghost btn-sm">🗺️ Reset View</button>
+            <button onclick="leafletMap&&leafletMap.setView([-7.5,110],8)" class="btn btn-ghost btn-sm">☕ Fokus Jawa</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#666;margin-bottom:12px;">Klik titik kota untuk detail. Scroll/pinch untuk zoom. Drag untuk geser.</div>
+        <div id="javaMap"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:11px;color:#666;">
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#E8590C;border-radius:50%;display:inline-block;"></span> Volume tinggi (&gt;30)</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#EF9F27;border-radius:50%;display:inline-block;"></span> Sedang (10–30)</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#2D9D78;border-radius:50%;display:inline-block;"></span> Rendah (&lt;10)</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card" style="padding:18px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:16px;">Order per Kota</div>
+          <div style="position:relative;height:220px;"><canvas id="mapOrderChart" role="img" aria-label="Order per kota Indonesia">Order per kota.</canvas></div>
+        </div>
+        <div class="card" style="padding:18px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:16px;">Omset per Kota</div>
+          <div style="position:relative;height:220px;"><canvas id="mapRevenueChart" role="img" aria-label="Omset per kota Indonesia">Omset per kota.</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="section-settings" class="section">
+      <div class="card" style="padding:24px;max-width:540px;">
+        <div style="font-size:15px;font-weight:500;margin-bottom:20px;">Koneksi Google Sheets</div>
+        <div style="margin-bottom:14px;">
+          <label class="form-label">URL Google Apps Script (Web App)</label>
+          <input id="scriptUrl" class="form-input" placeholder="https://script.google.com/macros/s/..." style="margin-top:6px;">
+          <div style="font-size:11px;color:#555;margin-top:6px;">Paste URL deployment dari Google Apps Script kamu di sini.</div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="form-label">Target Omset per Bulan (Rp)</label>
+          <input id="targetInput" class="form-input" type="number" placeholder="2000000" style="margin-top:6px;" value="2000000">
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" onclick="saveSettings()">Simpan & Tes Koneksi</button>
+          <button class="btn btn-ghost" onclick="clearSettings()">Reset</button>
+        </div>
+        <div id="connTestResult" style="margin-top:14px;font-size:12px;"></div>
+      </div>
+
+      <div class="card" style="padding:24px;max-width:540px;margin-top:14px;">
+        <div style="font-size:15px;font-weight:500;margin-bottom:16px;">Cara Setup (3 Langkah)</div>
+        <div style="display:flex;flex-direction:column;gap:14px;font-size:13px;color:#bbb;line-height:1.7;">
+          <div style="display:flex;gap:12px;">
+            <span style="background:#E8590C;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:2px;">1</span>
+            <div>Buka <a href="https://script.google.com" target="_blank" style="color:#E8590C;text-decoration:none;">script.google.com</a> → <strong>New Project</strong>. Hapus kode yang ada, paste seluruh isi file <code style="background:#222;padding:2px 6px;border-radius:4px;">mishoa_appscript.gs</code>.</div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <span style="background:#E8590C;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:2px;">2</span>
+            <div>Klik <strong>Deploy → New Deployment</strong>. Pilih type: <strong>Web App</strong>. Set <em>Execute as</em>: <strong>Me</strong>, dan <em>Who has access</em>: <strong>Anyone</strong>. Klik Deploy → salin URL-nya.</div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <span style="background:#E8590C;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:2px;">3</span>
+            <div>Paste URL di kolom di atas, klik <strong>Simpan & Tes Koneksi</strong>. Lalu update URL webhook di <code style="background:#222;padding:2px 6px;border-radius:4px;">index.html</code> toko kamu dengan URL yang sama.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD ORDER MODAL -->
+<div id="addModal" style="display:none;" class="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-box">
+    <div style="font-size:15px;font-weight:500;margin-bottom:20px;">Tambah Pesanan Manual</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <label class="form-label">Nama Pelanggan</label>
+        <input id="f_nama" class="form-input" placeholder="Budi Santoso" style="margin-top:5px;">
+      </div>
+      <div>
+        <label class="form-label">No. HP / WA</label>
+        <input id="f_hp" class="form-input" placeholder="08xxxx" style="margin-top:5px;">
+      </div>
+      <div>
+        <label class="form-label">Produk</label>
+        <select id="f_produk" class="form-input" style="margin-top:5px;">
+          <option>Ayam Bawang</option><option>Laksa</option><option>Mala</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Jumlah (pcs)</label>
+        <input id="f_qty" class="form-input" type="number" min="1" value="1" style="margin-top:5px;">
+      </div>
+      <div>
+        <label class="form-label">Kota</label>
+        <select id="f_kota" class="form-input" style="margin-top:5px;">
+          <option>Jakarta</option><option>Bekasi</option><option>Bogor</option><option>Bandung</option>
+          <option>Yogyakarta</option><option>Surabaya</option><option>Semarang</option><option>Cirebon</option><option>Solo</option><option>Malang</option>
+          <option>Medan</option><option>Palembang</option><option>Pekanbaru</option>
+          <option>Makassar</option><option>Denpasar</option><option>Balikpapan</option><option>Pontianak</option><option>Manado</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Status</label>
+        <select id="f_status" class="form-input" style="margin-top:5px;">
+          <option>Diproses</option><option>Dikirim</option><option>Selesai</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label class="form-label">Alamat Lengkap</label>
+      <input id="f_alamat" class="form-input" placeholder="Jl. ..." style="margin-top:5px;">
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveOrder()">Simpan Pesanan</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE STATUS MODAL -->
+<div id="updateModal" style="display:none;" class="modal-overlay" onclick="if(event.target===this) closeUpdateModal()">
+  <div class="modal-box">
+    <div style="font-size:15px;font-weight:500;margin-bottom:20px;">Update Status Pesanan</div>
+    <input type="hidden" id="u_orderId">
+    <div style="margin-bottom:12px;">
+      <label class="form-label">Order ID</label>
+      <div id="u_orderLabel" style="font-size:13px;color:#999;margin-top:5px;"></div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label class="form-label">Status Baru</label>
+      <select id="u_status" class="form-input" style="margin-top:5px;">
+        <option>Diproses</option><option>Dikirim</option><option>Selesai</option><option>Dibatalkan</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label">Catatan (opsional)</label>
+      <input id="u_catatan" class="form-input" placeholder="Catatan kurir, resi, dll" style="margin-top:5px;">
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+      <button class="btn btn-ghost" onclick="closeUpdateModal()">Batal</button>
+      <button class="btn btn-primary" onclick="submitUpdate()">Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+//  CONFIG & STATE
+// ================================================================
+const PRICES = { 'Ayam Bawang': 15000, 'Laksa': 18000, 'Mala': 18000 };
+const PRODUCTS = ['Ayam Bawang', 'Laksa', 'Mala'];
+const CITIES = ['Jakarta','Bekasi','Bogor','Bandung','Yogyakarta','Surabaya','Semarang','Cirebon','Solo','Malang','Medan','Palembang','Makassar','Denpasar','Balikpapan','Manado','Pontianak','Pekanbaru'];
+
+let config = {
+  scriptUrl: localStorage.getItem('mishoa_script_url') || '',
+  target: parseInt(localStorage.getItem('mishoa_target') || '2000000')
+};
+let currentRange = '7d';
+let allOrders = [];
+let summaryData = {};
+let currentPage = 1;
+const PAGE_SIZE = 25;
+
+// Charts
+let rChart, pChart, cChart, sChart, poChart, pqChart, moChart, mrChart;
+
+// ================================================================
+//  UTILS
+// ================================================================
+const fmtRp = n => 'Rp' + Math.round(n).toLocaleString('id-ID');
+const fmtK  = n => n >= 1000000 ? (n/1000000).toFixed(1)+'jt' : n >= 1000 ? (n/1000).toFixed(0)+'rb' : ''+Math.round(n);
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? '#7f1d1d' : '#333';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function destroyChart(c) { try { if(c) c.destroy(); } catch(e){} }
+
+// ================================================================
+//  SETTINGS
+// ================================================================
+function saveSettings() {
+  const url = document.getElementById('scriptUrl').value.trim();
+  const target = parseInt(document.getElementById('targetInput').value) || 2000000;
+  if (!url) { document.getElementById('connTestResult').innerHTML = '<span style="color:#f87171;">URL tidak boleh kosong.</span>'; return; }
+  localStorage.setItem('mishoa_script_url', url);
+  localStorage.setItem('mishoa_target', target);
+  config.scriptUrl = url;
+  config.target = target;
+  document.getElementById('connTestResult').innerHTML = '<span style="color:#fbbf24;">Menguji koneksi...</span>';
+  testConnection();
+}
+
+function clearSettings() {
+  localStorage.removeItem('mishoa_script_url');
+  localStorage.removeItem('mishoa_target');
+  config.scriptUrl = '';
+  document.getElementById('scriptUrl').value = '';
+  document.getElementById('connTestResult').innerHTML = '';
+  updateConnStatus(false);
+}
+
+async function testConnection() {
+  try {
+    const r = await apiFetch('summary', { days: 7 });
+    if (r && r.kpi !== undefined) {
+      document.getElementById('connTestResult').innerHTML = '<span style="color:#4ade80;">✓ Terhubung! Data berhasil dibaca.</span>';
+      updateConnStatus(true);
+      refreshData();
+    } else {
+      throw new Error('Response tidak valid');
+    }
+  } catch(e) {
+    document.getElementById('connTestResult').innerHTML = `<span style="color:#f87171;">✗ Gagal: ${e.message}. Pastikan URL benar & deployment sudah dipublish.</span>`;
+    updateConnStatus(false);
+  }
+}
+
+function updateConnStatus(ok) {
+  const el = document.getElementById('connStatus');
+  el.innerHTML = ok
+    ? '<span style="width:7px;height:7px;background:#4ade80;border-radius:50%;display:inline-block;"></span> Terhubung'
+    : '<span style="width:7px;height:7px;background:#f87171;border-radius:50%;display:inline-block;"></span> Tidak terhubung';
+  el.style.color = ok ? '#4ade80' : '#f87171';
+}
+
+// ================================================================
+//  API
+// ================================================================
+async function apiFetch(action, params = {}) {
+  if (!config.scriptUrl) throw new Error('URL belum dikonfigurasi');
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const url = config.scriptUrl + '?' + qs;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+async function apiPost(data) {
+  if (!config.scriptUrl) throw new Error('URL belum dikonfigurasi');
+  await fetch(config.scriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    mode: 'no-cors'
+  });
+}
+
+// ================================================================
+//  REFRESH / LOAD DATA
+// ================================================================
+async function refreshData() {
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true; btn.textContent = 'Memuat...';
+
+  const days = currentRange === '7d' ? 7 : currentRange === '30d' ? 30 : 90;
+
+  if (!config.scriptUrl) {
+    loadDemoData(days);
+    btn.disabled = false; btn.textContent = '↻ Refresh';
+    return;
+  }
+
+  try {
+    const [ordersRes, summaryRes] = await Promise.all([
+      apiFetch('orders', { days }),
+      apiFetch('summary', { days })
+    ]);
+    allOrders = ordersRes.orders || [];
+    summaryData = summaryRes;
+    updateConnStatus(true);
+    renderAll();
+    showToast('Data diperbarui dari Google Sheets');
+  } catch(e) {
+    showToast('Gagal memuat dari Sheets, tampil demo — ' + e.message, true);
+    loadDemoData(days);
+  }
+
+  btn.disabled = false; btn.textContent = '↻ Refresh';
+}
+
+function loadDemoData(days) {
+  const NAMES = ['Budi S','Rina A','Ahmad F','Siti N','Dewi R','Hendra P','Lina M','Yusuf T','Mega W','Eko B'];
+  const STATUSES = ['Selesai','Selesai','Selesai','Dikirim','Diproses','Dibatalkan'];
+  const HPS = ['0812xxxx','0821xxxx','0857xxxx','0878xxxx'];
+  let id = 100;
+  allOrders = [];
+  for (let i = days-1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const n = Math.floor(Math.random()*4)+1;
+    for (let j = 0; j < n; j++) {
+      const prod = PRODUCTS[Math.floor(Math.random()*3)];
+      const qty = Math.floor(Math.random()*3)+1;
+      const kota = CITIES[Math.floor(Math.random()*CITIES.length)];
+      allOrders.push({
+        order_id: 'MSH-'+(++id),
+        timestamp: d.toISOString(),
+        nama: NAMES[Math.floor(Math.random()*NAMES.length)],
+        no_hp: HPS[Math.floor(Math.random()*HPS.length)],
+        alamat: 'Jl. Contoh No.'+Math.floor(Math.random()*100)+', '+kota,
+        kota,
+        pesanan: prod+' x'+qty,
+        bonus: Math.floor(qty/3),
+        subtotal: PRICES[prod]*qty,
+        ongkir: 0,
+        total: PRICES[prod]*qty,
+        status: STATUSES[Math.floor(Math.random()*STATUSES.length)],
+        catatan: ''
+      });
+    }
+  }
+  buildSummaryFromOrders();
+  renderAll();
+}
+
+function buildSummaryFromOrders() {
+  const byDate = {}, byKota = {}, byProduct = {};
+  const kpi = { totalOmset:0, totalOrders:0, totalQty:0, totalBonus:0, selesai:0, dikirim:0, diproses:0, dibatalkan:0 };
+  allOrders.forEach(o => {
+    kpi.totalOrders++;
+    kpi.totalOmset += o.subtotal||0;
+    kpi.totalBonus += o.bonus||0;
+    const s = (o.status||'').toLowerCase();
+    if(s==='selesai') kpi.selesai++;
+    else if(s==='dikirim') kpi.dikirim++;
+    else if(s==='diproses') kpi.diproses++;
+    else if(s==='dibatalkan') kpi.dibatalkan++;
+    // parse pesanan
+    const m = (o.pesanan||'').match(/^(.+?)\s*x(\d+)/i);
+    if(m) {
+      const p=m[1].trim(), q=parseInt(m[2])||1;
+      kpi.totalQty += q;
+      if(!byProduct[p]) byProduct[p]={qty:0,omset:0};
+      byProduct[p].qty+=q; byProduct[p].omset+=(o.subtotal||0);
+    }
+    const kota = o.kota||'Lainnya';
+    if(!byKota[kota]) byKota[kota]={orders:0,omset:0};
+    byKota[kota].orders++; byKota[kota].omset+=(o.subtotal||0);
+    const ds = (o.timestamp||'').slice(0,10);
+    if(ds){ if(!byDate[ds]) byDate[ds]={orders:0,omset:0}; byDate[ds].orders++; byDate[ds].omset+=(o.subtotal||0); }
+  });
+  summaryData = { kpi, byProduct, byKota, byDate };
+}
+
+// ================================================================
+//  RENDER ALL
+// ================================================================
+function renderAll() {
+  renderKPI();
+  renderRevenueChart();
+  renderProductChart();
+  renderCityChart();
+  renderStatusChart();
+  renderTarget();
+  renderOrders();
+  renderProductTab();
+  renderMapTab();
+}
+
+// ================================================================
+//  KPI
+// ================================================================
+function renderKPI() {
+  const k = summaryData.kpi || {};
+  const avg = k.totalOrders ? Math.round(k.totalOmset / k.totalOrders) : 0;
+  const cityCount = Object.keys(summaryData.byKota || {}).length;
+  const kpis = [
+    { label:'Total Omset',   val: fmtRp(k.totalOmset||0),   sub: `${k.totalOrders||0} transaksi`,    cls:'neutral' },
+    { label:'Order Selesai', val: k.selesai||0,              sub: `${k.dikirim||0} dikirim`,          cls:'up' },
+    { label:'Rata-rata/Txn', val: fmtK(avg),                 sub: 'per transaksi',                    cls:'neutral' },
+    { label:'Total Qty',     val: (k.totalQty||0)+' pcs',    sub: `+${k.totalBonus||0} bonus keluar`, cls:'up' },
+    { label:'Kota Aktif',    val: cityCount,                  sub: 'dari 10 kota Jawa',               cls:'neutral' },
+    { label:'Dibatalkan',    val: k.dibatalkan||0,            sub: 'perlu tindak lanjut',              cls: (k.dibatalkan||0)>0?'down':'neutral' },
+  ];
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.val}</div>
+      <div class="kpi-sub ${k.cls}">${k.sub}</div>
+    </div>`).join('');
+}
+
+// ================================================================
+//  CHARTS — OVERVIEW
+// ================================================================
+function renderRevenueChart() {
+  const days = currentRange==='7d'?7:currentRange==='30d'?30:90;
+  const labels=[], data=[], orderData=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.toISOString().slice(0,10);
+    const dayData = summaryData.byDate?.[ds] || {omset:0,orders:0};
+    labels.push(d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}));
+    data.push(dayData.omset);
+    orderData.push(dayData.orders);
+  }
+  document.getElementById('revenueTotal').textContent = 'Total: ' + fmtRp(data.reduce((a,b)=>a+b,0));
+  destroyChart(rChart);
+  rChart = new Chart(document.getElementById('revenueChart'),{
+    data:{labels,datasets:[
+      {type:'bar',label:'Omset',data,backgroundColor:'rgba(232,89,12,0.7)',borderRadius:3,yAxisID:'y'},
+      {type:'line',label:'Order',data:orderData,borderColor:'#2D9D78',backgroundColor:'transparent',pointRadius:2,borderWidth:2,tension:0.4,yAxisID:'y1'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      x:{ticks:{font:{size:10},color:'#555',autoSkip:days>30,maxRotation:45},grid:{color:'rgba(255,255,255,0.03)'}},
+      y:{ticks:{callback:v=>fmtK(v),font:{size:10},color:'#555'},grid:{color:'rgba(255,255,255,0.04)'}},
+      y1:{position:'right',ticks:{font:{size:10},color:'#2D9D78'},grid:{display:false}}
+    }}
+  });
+}
+
+function renderProductChart() {
+  const bp = summaryData.byProduct || {};
+  const totals = PRODUCTS.map(p => bp[p]?.qty || 0);
+  destroyChart(pChart);
+  pChart = new Chart(document.getElementById('productChart'),{
+    type:'doughnut',
+    data:{labels:PRODUCTS,datasets:[{data:totals,backgroundColor:['#E8590C','#378ADD','#2D9D78'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:true,position:'bottom',labels:{color:'#888',font:{size:10},boxWidth:10,padding:8}}}}
+  });
+}
+
+function renderCityChart() {
+  const bk = summaryData.byKota || {};
+  const sorted = Object.entries(bk).sort((a,b)=>b[1].orders-a[1].orders).slice(0,7);
+  destroyChart(cChart);
+  cChart = new Chart(document.getElementById('cityChart'),{
+    type:'bar',
+    data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1].orders),backgroundColor:'rgba(55,138,221,0.7)',borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{
+      x:{ticks:{font:{size:10},color:'#555'},grid:{color:'rgba(255,255,255,0.04)'}},
+      y:{ticks:{font:{size:10},color:'#888'}}
+    }}
+  });
+}
+
+function renderStatusChart() {
+  const k = summaryData.kpi || {};
+  destroyChart(sChart);
+  sChart = new Chart(document.getElementById('statusChart'),{
+    type:'doughnut',
+    data:{
+      labels:['Selesai','Dikirim','Diproses','Dibatalkan'],
+      datasets:[{data:[k.selesai||0,k.dikirim||0,k.diproses||0,k.dibatalkan||0],backgroundColor:['#16a34a','#3b82f6','#fbbf24','#ef4444'],borderWidth:0}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'right',labels:{color:'#888',font:{size:10},boxWidth:10,padding:6}}}}
+  });
+}
+
+function renderTarget() {
+  const omset = summaryData.kpi?.totalOmset || 0;
+  const days = currentRange==='7d'?7:currentRange==='30d'?30:90;
+  const t = days===7 ? config.target/4 : days===30 ? config.target : config.target*3;
+  const pct = Math.min(100, Math.round(omset/t*100));
+  const color = pct>=100?'#4ade80':pct>=60?'#fbbf24':'#E8590C';
+  document.getElementById('targetSection').innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:6px;">
+      <span>Target: ${fmtRp(Math.round(t))}</span><span style="color:${color};font-weight:500;">${pct}%</span>
+    </div>
+    <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;background:${color};"></div></div>
+    <div style="font-size:11px;color:#555;margin-top:5px;">${pct<100?'Sisa '+fmtRp(Math.round(t-omset)):'✓ Target tercapai!'}</div>`;
+}
+
+// ================================================================
+//  ORDERS TABLE
+// ================================================================
+function renderOrders() {
+  const statusF = document.getElementById('filterStatus')?.value || '';
+  const kotaF   = document.getElementById('filterKota')?.value || '';
+  const searchF = document.getElementById('searchOrder')?.value?.toLowerCase() || '';
+  let filtered = allOrders.filter(o => {
+    if(statusF && o.status !== statusF) return false;
+    if(kotaF && o.kota !== kotaF) return false;
+    if(searchF && !o.nama.toLowerCase().includes(searchF) && !o.order_id.toLowerCase().includes(searchF)) return false;
+    return true;
+  });
+  const total = filtered.length;
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const start = (currentPage-1)*PAGE_SIZE;
+  const pageOrders = filtered.slice(start, start+PAGE_SIZE);
+
+  const sMap = {'Selesai':'pill-done','Diproses':'pill-proc','Dikirim':'pill-ship','Dibatalkan':'pill-cancel'};
+  const rows = pageOrders.map(o => `
+    <tr>
+      <td style="font-size:11px;color:#555;">${o.order_id}</td>
+      <td>
+        <div style="font-weight:500;">${o.nama}</div>
+        <div style="font-size:11px;color:#555;">${o.no_hp||'—'}</div>
+      </td>
+      <td>${o.pesanan}</td>
+      <td><span style="font-size:11px;">${o.kota||'—'}</span></td>
+      <td style="font-weight:500;">${fmtRp(o.subtotal||0)}</td>
+      <td><span class="pill ${sMap[o.status]||'pill-proc'}">${o.status||'Diproses'}</span></td>
+      <td style="font-size:11px;color:#555;">${(o.timestamp||'').slice(0,10)}</td>
+      <td>
+        <button onclick="openUpdateModal('${o.order_id}','${o.status||'Diproses'}')" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;">Edit</button>
+        ${o.no_hp ? `<a href="https://wa.me/${o.no_hp.replace(/\D/g,'')}" target="_blank" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;text-decoration:none;color:#4ade80;">WA</a>` : ''}
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('orderTableWrap').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Order ID</th><th>Nama / HP</th><th>Pesanan</th><th>Kota</th><th>Subtotal</th><th>Status</th><th>Tanggal</th><th>Aksi</th>
+      </tr></thead>
+      <tbody>${rows||'<tr><td colspan="8" style="text-align:center;color:#555;padding:32px;">Tidak ada pesanan ditemukan.</td></tr>'}</tbody>
+    </table>`;
+
+  const pg = document.getElementById('orderPagination');
+  pg.innerHTML = '';
+  if(pages > 1) {
+    for(let i=1;i<=pages;i++){
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.className = 'range-btn' + (i===currentPage?' active':'');
+      btn.onclick = () => { currentPage=i; renderOrders(); };
+      pg.appendChild(btn);
+    }
+  }
+}
+
+function applyFilters() { currentPage=1; renderOrders(); }
+
+// ================================================================
+//  PRODUCT TAB
+// ================================================================
+function renderProductTab() {
+  const bp = summaryData.byProduct || {};
+  const totalOmset = PRODUCTS.reduce((s,p)=>s+(bp[p]?.omset||0),0);
+
+  document.getElementById('productKpiGrid').innerHTML = PRODUCTS.map(p => `
+    <div class="kpi-card">
+      <div class="kpi-label">${p}</div>
+      <div class="kpi-value">${fmtK(bp[p]?.omset||0)}</div>
+      <div class="kpi-sub neutral">${bp[p]?.qty||0} pcs · bonus ${Math.floor((bp[p]?.qty||0)/3)}x</div>
+    </div>`).join('');
+
+  destroyChart(poChart);
+  poChart = new Chart(document.getElementById('perfOmsetChart'),{
+    type:'bar',
+    data:{labels:PRODUCTS,datasets:[{data:PRODUCTS.map(p=>bp[p]?.omset||0),backgroundColor:['rgba(232,89,12,0.75)','rgba(55,138,221,0.75)','rgba(45,157,120,0.75)'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtK(v),font:{size:10},color:'#555'},grid:{color:'rgba(255,255,255,0.04)'}},x:{ticks:{font:{size:11},color:'#888'}}}}
+  });
+
+  destroyChart(pqChart);
+  pqChart = new Chart(document.getElementById('perfQtyChart'),{
+    type:'bar',
+    data:{labels:PRODUCTS,datasets:[{data:PRODUCTS.map(p=>bp[p]?.qty||0),backgroundColor:['rgba(232,89,12,0.75)','rgba(55,138,221,0.75)','rgba(45,157,120,0.75)'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:10},color:'#555'},grid:{color:'rgba(255,255,255,0.04)'}},x:{ticks:{font:{size:11},color:'#888'}}}}
+  });
+
+  document.getElementById('productBody').innerHTML = PRODUCTS.map(p => {
+    const d = bp[p]||{qty:0,omset:0};
+    const share = totalOmset ? Math.round(d.omset/totalOmset*100) : 0;
+    return `<tr>
+      <td style="font-weight:500;">${p}</td>
+      <td>${d.qty} pcs</td>
+      <td style="font-weight:500;">${fmtRp(d.omset)}</td>
+      <td style="color:#fbbf24;">${Math.floor(d.qty/3)}x gratis</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="progress-bg" style="flex:1;"><div class="progress-fill" style="width:${share}%;background:#E8590C;"></div></div>
+          <span style="font-size:11px;color:#888;min-width:28px;">${share}%</span>
+        </div>
+      </td>
+    </tr>`;}).join('');
+}
+
+// ================================================================
+//  MAP TAB
+// ================================================================
+let leafletMap = null;
+let leafletMarkers = [];
+
+function renderMapTab() {
+  const bk = summaryData.byKota || {};
+  const sorted = CITIES.slice().sort((a,b)=>(bk[b]?.orders||0)-(bk[a]?.orders||0));
+  const maxO = Math.max(...CITIES.map(c=>bk[c]?.orders||0), 1);
+
+  const cityLatLng = {
+    'Jakarta':    [-6.21,  106.85], 'Bekasi':     [-6.24,  106.99],
+    'Bogor':      [-6.60,  106.80], 'Bandung':    [-6.91,  107.61],
+    'Cirebon':    [-6.73,  108.55], 'Semarang':   [-6.99,  110.42],
+    'Yogyakarta': [-7.80,  110.37], 'Solo':       [-7.57,  110.83],
+    'Surabaya':   [-7.25,  112.75], 'Malang':     [-7.98,  112.63],
+    'Medan':      [3.59,    98.67], 'Palembang':  [-2.99,  104.75],
+    'Makassar':   [-5.14,  119.43], 'Denpasar':   [-8.65,  115.22],
+    'Balikpapan': [-1.27,  116.83], 'Manado':     [1.49,   124.84],
+    'Pontianak':  [-0.03,  109.33], 'Pekanbaru':  [0.53,   101.45],
+  };
+
+  // Init Leaflet map sekali saja
+  if (!leafletMap) {
+    leafletMap = L.map('javaMap', {
+      center: [-2.5, 118],
+      zoom: 5,
+      zoomControl: true,
+      scrollWheelZoom: true
+    });
+
+    // Dark tile layer dari CartoDB
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap © CartoDB',
+      subdomains: 'abcd',
+      maxZoom: 18
+    }).addTo(leafletMap);
+  }
+
+  // Hapus marker lama
+  leafletMarkers.forEach(m => leafletMap.removeLayer(m));
+  leafletMarkers = [];
+
+  // Tambah marker per kota
+  Object.entries(cityLatLng).forEach(([city, [lat, lng]]) => {
+    const stat = bk[city] || { orders: 0, omset: 0 };
+    const r = Math.max(10, Math.min(34, 10 + (stat.orders / maxO) * 26));
+    const col = stat.orders > 30 ? '#E8590C' : stat.orders >= 10 ? '#EF9F27' : '#2D9D78';
+    const pulse = stat.orders >= 10 ? `box-shadow:0 0 0 4px ${col}44;` : '';
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:${r*2}px;height:${r*2}px;border-radius:50%;
+        background:${col};opacity:0.88;
+        border:2px solid rgba(255,255,255,0.25);
+        display:flex;align-items:center;justify-content:center;
+        color:#fff;font-size:${r>14?'10':'8'}px;font-weight:700;
+        font-family:Inter,sans-serif;cursor:pointer;
+        ${pulse}
+        transform:translate(-50%,-50%);
+      ">${stat.orders > 0 ? stat.orders : ''}</div>`,
+      iconSize: [r*2, r*2],
+      iconAnchor: [r, r],
+    });
+
+    const marker = L.marker([lat, lng], { icon })
+      .addTo(leafletMap)
+      .bindPopup(`
+        <div style="font-family:Inter,sans-serif;min-width:160px;">
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">📍 ${city}</div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+            <span style="color:#888;">Total Order</span>
+            <span style="font-weight:600;">${stat.orders}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+            <span style="color:#888;">Omset</span>
+            <span style="font-weight:600;">${fmtRp(stat.omset)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:#888;">Status</span>
+            <span style="color:${col};font-weight:500;">${stat.orders>30?'🔥 Tinggi':stat.orders>=10?'📈 Sedang':'📊 Rendah'}</span>
+          </div>
+        </div>
+      `, { maxWidth: 220 });
+
+    leafletMarkers.push(marker);
+  });
+
+  // Refresh ukuran map (kalau baru pertama tampil)
+  setTimeout(() => leafletMap.invalidateSize(), 100);
+
+  destroyChart(moChart);
+  moChart = new Chart(document.getElementById('mapOrderChart'),{
+    type:'bar',
+    data:{labels:sorted,datasets:[{data:sorted.map(c=>bk[c]?.orders||0),backgroundColor:'rgba(232,89,12,0.7)',borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#555'}},y:{ticks:{font:{size:9},color:'#888'}}}}
+  });
+  destroyChart(mrChart);
+  mrChart = new Chart(document.getElementById('mapRevenueChart'),{
+    type:'bar',
+    data:{labels:sorted,datasets:[{data:sorted.map(c=>bk[c]?.omset||0),backgroundColor:'rgba(55,138,221,0.7)',borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtRp(ctx.raw)}}},scales:{x:{ticks:{callback:v=>fmtK(v),font:{size:10},color:'#555'}},y:{ticks:{font:{size:9},color:'#888'}}}}
+  });
+}
+
+// ================================================================
+//  MODALS — ADD ORDER
+// ================================================================
+function showAddModal() { document.getElementById('addModal').style.display='flex'; }
+function closeModal()   { document.getElementById('addModal').style.display='none'; }
+
+async function saveOrder() {
+  const nama = document.getElementById('f_nama').value.trim();
+  const hp   = document.getElementById('f_hp').value.trim();
+  if(!nama){ showToast('Isi nama pelanggan', true); return; }
+  const produk = document.getElementById('f_produk').value;
+  const qty    = parseInt(document.getElementById('f_qty').value)||1;
+  const kota   = document.getElementById('f_kota').value;
+  const status = document.getElementById('f_status').value;
+  const alamat = document.getElementById('f_alamat').value.trim();
+
+  const now = new Date();
+  const orderId = 'MSH-'+now.getFullYear().toString().slice(-2)+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'-'+now.getTime().toString().slice(-6);
+
+  const payload = {
+    order_id: orderId, timestamp: now.toISOString(),
+    nama, no_hp: hp, alamat, kota,
+    pesanan: produk+' x'+qty, bonus: Math.floor(qty/3),
+    subtotal: PRICES[produk]*qty, ongkir: 0,
+    total: PRICES[produk]*qty, status
+  };
+
+  // Add to local state
+  allOrders.unshift({ ...payload });
+  buildSummaryFromOrders();
+
+  // Post to sheet if connected
+  if(config.scriptUrl) {
+    try { await apiPost(payload); showToast('Order disimpan ke Google Sheets ✓'); }
+    catch(e) { showToast('Tersimpan lokal, gagal ke Sheets: '+e.message, true); }
+  } else {
+    showToast('Order ditambahkan (mode demo)');
+  }
+
+  closeModal();
+  renderAll();
+  document.getElementById('f_nama').value='';
+  document.getElementById('f_hp').value='';
+  document.getElementById('f_alamat').value='';
+}
+
+// ================================================================
+//  MODALS — UPDATE STATUS
+// ================================================================
+function openUpdateModal(orderId, currentStatus) {
+  document.getElementById('u_orderId').value = orderId;
+  document.getElementById('u_orderLabel').textContent = orderId;
+  document.getElementById('u_status').value = currentStatus;
+  document.getElementById('u_catatan').value = '';
+  document.getElementById('updateModal').style.display = 'flex';
+}
+function closeUpdateModal() { document.getElementById('updateModal').style.display='none'; }
+
+async function submitUpdate() {
+  const orderId = document.getElementById('u_orderId').value;
+  const status  = document.getElementById('u_status').value;
+  const catatan = document.getElementById('u_catatan').value;
+
+  // Update locally
+  const order = allOrders.find(o=>o.order_id===orderId);
+  if(order){ order.status=status; order.catatan=catatan; }
+  buildSummaryFromOrders();
+
+  // Update on sheet
+  if(config.scriptUrl) {
+    try {
+      await apiFetch('update', { id: orderId, status, catatan });
+      showToast('Status diupdate ✓');
+    } catch(e) {
+      showToast('Update lokal, gagal ke Sheets: '+e.message, true);
+    }
+  } else {
+    showToast('Status diperbarui (mode demo)');
+  }
+
+  closeUpdateModal();
+  renderAll();
+}
+
+// ================================================================
+//  NAV & RANGE
+// ================================================================
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='settings'){
+    document.getElementById('scriptUrl').value = config.scriptUrl;
+    document.getElementById('targetInput').value = config.target;
+  }
+}
+
+function setRange(el, r) {
+  document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  currentRange = r;
+  currentPage = 1;
+  refreshData();
+}
+
+// ================================================================
+//  PIN LOCK
+// ================================================================
+const DEFAULT_PIN = '1234';
+let pinBuffer = '';
+let pinMode = 'login'; // 'login' | 'set_new' | 'confirm_new'
+let pinTemp = '';
+
+function getStoredPin() { return localStorage.getItem('mishoa_pin') || DEFAULT_PIN; }
+
+function pinInput(digit) {
+  if(pinBuffer.length >= 6) return;
+  pinBuffer += digit;
+  updatePinDots();
+  if(pinBuffer.length === getPinLength()) {
+    setTimeout(()=>checkPin(), 120);
+  }
+}
+
+function getPinLength() { return getStoredPin().length; }
+
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function updatePinDots(mode='normal') {
+  const len = getPinLength();
+  // Show correct number of dots
+  for(let i=0;i<6;i++){
+    const d = document.getElementById('d'+i);
+    d.style.display = i < len ? 'block' : 'none';
+    d.className = 'pin-dot';
+    if(mode==='error') d.classList.add('error');
+    else if(i < pinBuffer.length) d.classList.add('filled');
+  }
+}
+
+function checkPin() {
+  if(pinMode === 'login') {
+    if(pinBuffer === getStoredPin()) {
+      document.getElementById('pinOverlay').style.display = 'none';
+      // Save session (lasts until browser tab closed)
+      sessionStorage.setItem('mishoa_auth','1');
+    } else {
+      pinBuffer = '';
+      updatePinDots('error');
+      document.getElementById('pinError').textContent = '❌ PIN salah, coba lagi';
+      setTimeout(()=>{ updatePinDots(); document.getElementById('pinError').textContent=''; }, 800);
+    }
+  } else if(pinMode === 'set_new') {
+    if(pinBuffer.length < 4) {
+      document.getElementById('pinError').textContent = 'PIN minimal 4 digit';
+      pinBuffer=''; updatePinDots(); return;
+    }
+    pinTemp = pinBuffer;
+    pinBuffer = '';
+    pinMode = 'confirm_new';
+    document.getElementById('pinSubText').textContent = 'Konfirmasi PIN baru';
+    // Adjust dots for new pin length
+    for(let i=0;i<6;i++){
+      document.getElementById('d'+i).style.display = i < pinTemp.length ? 'block' : 'none';
+    }
+    updatePinDots();
+    document.getElementById('pinError').textContent = '';
+  } else if(pinMode === 'confirm_new') {
+    if(pinBuffer === pinTemp) {
+      localStorage.setItem('mishoa_pin', pinTemp);
+      document.getElementById('pinError').style.color = '#4ade80';
+      document.getElementById('pinError').textContent = '✓ PIN berhasil disimpan!';
+      setTimeout(()=>{
+        pinMode = 'login';
+        pinBuffer = '';
+        pinTemp = '';
+        document.getElementById('pinSubText').textContent = 'Masukkan PIN untuk masuk';
+        document.getElementById('pinError').style.color = '#f87171';
+        document.getElementById('pinError').textContent = '';
+        updatePinDots();
+      }, 1200);
+    } else {
+      pinBuffer = '';
+      updatePinDots('error');
+      document.getElementById('pinError').textContent = '❌ PIN tidak cocok, ulangi';
+      setTimeout(()=>{
+        pinMode = 'set_new';
+        pinTemp = '';
+        document.getElementById('pinSubText').textContent = 'Masukkan PIN baru';
+        updatePinDots();
+        document.getElementById('pinError').textContent = '';
+      }, 900);
+    }
+  }
+}
+
+function showChangePin() {
+  pinMode = 'set_new';
+  pinBuffer = '';
+  pinTemp = '';
+  document.getElementById('pinSubText').textContent = 'Masukkan PIN baru (4–6 digit)';
+  document.getElementById('pinError').textContent = '';
+  // Show 6 dots for flexible length input
+  for(let i=0;i<6;i++) document.getElementById('d'+i).style.display = 'block';
+  updatePinDots();
+  document.getElementById('pinOverlay').style.display = 'flex';
+}
+
+// Also add logout button to sidebar
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Add logout to sidebar bottom
+  const connDiv = document.querySelector('.sidebar > div:last-child');
+  if(connDiv) {
+    const logoutBtn = document.createElement('div');
+    logoutBtn.innerHTML = `<button onclick="lockDashboard()" style="width:100%;text-align:left;background:transparent;border:none;color:#555;font-size:11px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:6px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Kunci Dashboard
+    </button>`;
+    connDiv.appendChild(logoutBtn);
+  }
+  updatePinDots();
+});
+
+function lockDashboard() {
+  sessionStorage.removeItem('mishoa_auth');
+  pinMode = 'login';
+  pinBuffer = '';
+  document.getElementById('pinSubText').textContent = 'Masukkan PIN untuk masuk';
+  document.getElementById('pinError').textContent = '';
+  updatePinDots();
+  document.getElementById('pinOverlay').style.display = 'flex';
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+window.onload = function() {
+  // Check if already authenticated this session
+  if(sessionStorage.getItem('mishoa_auth') === '1') {
+    document.getElementById('pinOverlay').style.display = 'none';
+  } else {
+    updatePinDots();
+  }
+  if(config.scriptUrl) updateConnStatus(true);
+  refreshData();
+  setInterval(()=>{ if(config.scriptUrl) refreshData(); }, 5*60*1000);
+};
+</script>
+</body>
+</html>
