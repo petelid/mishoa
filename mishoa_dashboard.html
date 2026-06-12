@@ -72,9 +72,8 @@
   .form-input:focus { outline: none; border-color: #E8590C; }
 
   /* MAP */
-  #javaMap { width: 100%; height: 480px; position: relative; border-radius: 10px; background: #1a1a2e; }
-  .leaflet-container { border-radius: 10px; background: #1a1a2e !important; }
-  .leaflet-tile-pane { opacity: 1; }
+  #javaMap { width: 100%; height: 480px; border-radius: 10px; background: #1a1a2e; display: block; }
+  .leaflet-container { width: 100% !important; height: 100% !important; border-radius: 10px; }
   .mishoa-marker-label { background: rgba(13,13,13,0.85); border: 1px solid #333; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #f0f0f0; white-space: nowrap; font-family: 'Inter', sans-serif; }
   .city-tooltip { position: absolute; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 10; display: none; min-width: 160px; }
 
@@ -903,26 +902,29 @@ function renderMapTab() {
     'Pontianak':  [-0.03,  109.33], 'Pekanbaru':  [0.53,   101.45],
   };
 
-  // Init Leaflet map sekali saja
-  if (!leafletMap) {
-    leafletMap = L.map('javaMap', {
-      center: [-2.5, 118],
-      zoom: 5,
-      zoomControl: true,
-      scrollWheelZoom: true
-    });
-
-    // OpenStreetMap standard - paling reliable
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 18,
-      crossOrigin: true
-    }).addTo(leafletMap);
+  // Destroy map lama kalau ada
+  if (leafletMap) {
+    leafletMap.remove();
+    leafletMap = null;
+    leafletMarkers = [];
   }
 
-  // Hapus marker lama
-  leafletMarkers.forEach(m => leafletMap.removeLayer(m));
-  leafletMarkers = [];
+  // Reset container
+  const container = document.getElementById('javaMap');
+  container.innerHTML = '';
+
+  // Init Leaflet baru
+  leafletMap = L.map('javaMap', {
+    center: [-2.5, 118],
+    zoom: 5,
+    zoomControl: true,
+    scrollWheelZoom: true
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(leafletMap);
 
   // Tambah marker per kota
   Object.entries(cityLatLng).forEach(([city, [lat, lng]]) => {
@@ -935,13 +937,13 @@ function renderMapTab() {
       className: '',
       html: `<div style="
         width:${r*2}px;height:${r*2}px;border-radius:50%;
-        background:${col};opacity:0.88;
-        border:2px solid rgba(255,255,255,0.25);
+        background:${col};opacity:0.9;
+        border:2px solid rgba(255,255,255,0.3);
         display:flex;align-items:center;justify-content:center;
         color:#fff;font-size:${r>14?'10':'8'}px;font-weight:700;
         font-family:Inter,sans-serif;cursor:pointer;
         ${pulse}
-        transform:translate(-50%,-50%);
+        margin-left:-${r}px;margin-top:-${r}px;
       ">${stat.orders > 0 ? stat.orders : ''}</div>`,
       iconSize: [r*2, r*2],
       iconAnchor: [r, r],
@@ -953,15 +955,13 @@ function renderMapTab() {
         <div style="font-family:Inter,sans-serif;min-width:160px;">
           <div style="font-weight:600;font-size:13px;margin-bottom:8px;">📍 ${city}</div>
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-            <span style="color:#888;">Total Order</span>
-            <span style="font-weight:600;">${stat.orders}</span>
+            <span style="color:#666;">Total Order</span><span style="font-weight:600;">${stat.orders}</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-            <span style="color:#888;">Omset</span>
-            <span style="font-weight:600;">${fmtRp(stat.omset)}</span>
+            <span style="color:#666;">Omset</span><span style="font-weight:600;">${fmtRp(stat.omset)}</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:#888;">Status</span>
+            <span style="color:#666;">Status</span>
             <span style="color:${col};font-weight:500;">${stat.orders>30?'🔥 Tinggi':stat.orders>=10?'📈 Sedang':'📊 Rendah'}</span>
           </div>
         </div>
@@ -970,10 +970,8 @@ function renderMapTab() {
     leafletMarkers.push(marker);
   });
 
-  // Refresh ukuran map (kalau baru pertama tampil)
-  setTimeout(() => { leafletMap.invalidateSize(); }, 100);
-  setTimeout(() => { leafletMap.invalidateSize(); }, 500);
-  setTimeout(() => { leafletMap.invalidateSize(); }, 1000);
+  // Single invalidateSize setelah render selesai
+  setTimeout(() => leafletMap.invalidateSize(false), 200);
 
   destroyChart(moChart);
   moChart = new Chart(document.getElementById('mapOrderChart'),{
