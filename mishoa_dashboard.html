@@ -565,7 +565,21 @@ async function refreshData() {
       apiFetch('orders', { days }),
       apiFetch('summary', { days })
     ]);
-    allOrders = ordersRes.orders || [];
+    allOrders = (ordersRes.orders || []).map(o => ({
+      ...o,
+      order_id:  String(o.order_id  || ''),
+      nama:      String(o.nama      || ''),
+      no_hp:     String(o.no_hp     || ''),
+      kota:      String(o.kota      || ''),
+      alamat:    String(o.alamat    || ''),
+      pesanan:   String(o.pesanan   || ''),
+      status:    String(o.status    || 'Diproses'),
+      catatan:   String(o.catatan   || ''),
+      subtotal:  parseFloat(o.subtotal) || 0,
+      ongkir:    parseFloat(o.ongkir)   || 0,
+      total:     parseFloat(o.total)    || 0,
+      bonus:     parseInt(o.bonus)      || 0,
+    }));
     summaryData = summaryRes;
     updateConnStatus(true);
     renderAll();
@@ -770,7 +784,7 @@ function renderOrders() {
   let filtered = allOrders.filter(o => {
     if(statusF && o.status !== statusF) return false;
     if(kotaF && o.kota !== kotaF) return false;
-    if(searchF && !o.nama.toLowerCase().includes(searchF) && !o.order_id.toLowerCase().includes(searchF)) return false;
+    if(searchF && !String(o.nama||'').toLowerCase().includes(searchF) && !String(o.order_id||'').toLowerCase().includes(searchF)) return false;
     return true;
   });
   const total = filtered.length;
@@ -793,7 +807,7 @@ function renderOrders() {
       <td style="font-size:11px;color:#555;">${(o.timestamp||'').slice(0,10)}</td>
       <td>
         <button onclick="openUpdateModal('${o.order_id}','${o.status||'Diproses'}')" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;">Edit</button>
-        ${o.no_hp ? `<a href="https://wa.me/${o.no_hp.replace(/\D/g,'')}" target="_blank" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;text-decoration:none;color:#4ade80;">WA</a>` : ''}
+        ${o.no_hp ? `<a href="https://wa.me/${String(o.no_hp).replace(/\D/g,'')}" target="_blank" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;text-decoration:none;color:#4ade80;">WA</a>` : ''}
       </td>
     </tr>`).join('');
 
