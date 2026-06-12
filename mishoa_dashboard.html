@@ -447,7 +447,7 @@ const PRODUCTS = ['Ayam Bawang', 'Laksa', 'Mala'];
 const CITIES = ['Jakarta','Bekasi','Bogor','Bandung','Yogyakarta','Surabaya','Semarang','Cirebon','Solo','Malang','Medan','Palembang','Makassar','Denpasar','Balikpapan','Manado','Pontianak','Pekanbaru'];
 
 let config = {
-  scriptUrl: localStorage.getItem('mishoa_script_url') || '',
+  scriptUrl: localStorage.getItem('mishoa_script_url') || 'https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec',
   target: parseInt(localStorage.getItem('mishoa_target') || '2000000')
 };
 let currentRange = '7d';
@@ -915,7 +915,8 @@ function renderMapTab() {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap © CartoDB',
       subdomains: 'abcd',
-      maxZoom: 18
+      maxZoom: 18,
+      crossOrigin: true
     }).addTo(leafletMap);
   }
 
@@ -1095,7 +1096,7 @@ function setRange(el, r) {
 // ================================================================
 //  PIN LOCK
 // ================================================================
-const DEFAULT_PIN = '1234';
+const DEFAULT_PIN = '8055';
 let pinBuffer = '';
 let pinMode = 'login'; // 'login' | 'set_new' | 'confirm_new'
 let pinTemp = '';
