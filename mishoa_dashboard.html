@@ -16,7 +16,12 @@
   /* LAYOUT */
   .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 220px; background: #111; border-right: 1px solid #222; z-index: 40; display: flex; flex-direction: column; }
   .main { margin-left: 220px; min-height: 100vh; }
-  @media(max-width:768px){ .sidebar{display:none;} .main{margin-left:0;} }
+  @media(max-width:768px){ .sidebar{display:none;} .main{margin-left:0; padding-bottom:72px;} }
+  #mobileNav { display:none; position:fixed; bottom:0; left:0; right:0; background:#111; border-top:1px solid #222; z-index:50; padding:6px 0 8px; }
+  @media(max-width:768px){ #mobileNav { display:flex; } }
+  .mob-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; color:#555; font-size:9px; font-weight:500; transition:color 0.15s; border:none; background:transparent; }
+  .mob-nav-item svg { width:20px; height:20px; }
+  .mob-nav-item.active { color:#E8590C; }
 
   /* NAV */
   .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #999; transition: all 0.15s; margin: 2px 8px; }
@@ -182,6 +187,30 @@
   </div>
 </div>
 
+<!-- ===================== MOBILE NAV ===================== -->
+<div id="mobileNav">
+  <button class="mob-nav-item active" onclick="showSection('overview',this)" id="mob-overview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Ringkasan
+  </button>
+  <button class="mob-nav-item" onclick="showSection('orders',this)" id="mob-orders">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    Pesanan
+  </button>
+  <button class="mob-nav-item" onclick="showSection('products',this)" id="mob-products">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>
+    Produk
+  </button>
+  <button class="mob-nav-item" onclick="showSection('map',this)" id="mob-map">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+    Peta
+  </button>
+  <button class="mob-nav-item" onclick="showSection('settings',this)" id="mob-settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Setting
+  </button>
+</div>
+
 <!-- ===================== MAIN ===================== -->
 <div class="main">
 
@@ -291,8 +320,10 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
           <div style="font-size:13px;font-weight:500;">Peta Pengiriman — Indonesia</div>
           <div style="display:flex;gap:8px;">
-            <button onclick="renderMapTab()" class="btn btn-ghost btn-sm">🗺️ Reset View</button>
-            <button onclick="focusJawa()" class="btn btn-ghost btn-sm">☕ Fokus Jawa</button>
+            <button onclick="mapZoomIn()" class="btn btn-ghost btn-sm">➕ Zoom In</button>
+            <button onclick="mapZoomOut()" class="btn btn-ghost btn-sm">➖ Zoom Out</button>
+            <button onclick="mapResetView()" class="btn btn-ghost btn-sm">🗺️ Reset View</button>
+            <button onclick="mapFocusJawa()" class="btn btn-ghost btn-sm">☕ Fokus Jawa</button>
           </div>
         </div>
         <div style="font-size:11px;color:#666;margin-bottom:12px;">Klik titik kota untuk detail. Scroll/pinch untuk zoom. Drag untuk geser.</div>
@@ -880,7 +911,30 @@ function renderProductTab() {
 //  MAP TAB
 // ================================================================
 let mapMode = 'indonesia'; // 'indonesia' | 'jawa'
-function focusJawa(){ mapMode='jawa'; renderMapTab(); }
+function mapZoomIn() {
+  if(!window._mishoaZoom) return;
+  const { svg, behavior } = window._mishoaZoom;
+  svg.transition().duration(250).call(behavior.scaleBy, 1.5);
+}
+function mapZoomOut() {
+  if(!window._mishoaZoom) return;
+  const { svg, behavior } = window._mishoaZoom;
+  svg.transition().duration(250).call(behavior.scaleBy, 0.67);
+}
+function mapResetView() {
+  if(!window._mishoaZoom) return;
+  const { svg, behavior } = window._mishoaZoom;
+  svg.transition().duration(350).call(behavior.transform, d3.zoomIdentity);
+}
+function mapFocusJawa() {
+  if(!window._mishoaZoom) return;
+  const { svg, behavior } = window._mishoaZoom;
+  // Pusat Jawa kira-kira di x=320,y=290 pada viewBox 700x440. Zoom level 2.8
+  const scale = 2.8;
+  const tx = 350 - scale*320;
+  const ty = 220 - scale*290;
+  svg.transition().duration(450).call(behavior.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+}
 
 function renderMapTab() {
   const bk = summaryData.byKota || {};
@@ -917,10 +971,28 @@ function renderMapTab() {
 
   const svg = d3.select('#javaMap').append('svg')
     .attr('width', '100%').attr('height', H)
-    .attr('viewBox', `0 0 700 440`);
+    .attr('viewBox', `0 0 700 440`)
+    .style('cursor', 'grab');
 
-  // Background laut
-  svg.append('rect').attr('width', 700).attr('height', 440).attr('fill', '#0a1628').attr('rx', 10);
+  // Group yang akan di-zoom/pan
+  const zoomG = svg.append('g').attr('class', 'zoom-group');
+
+  // Background laut (di luar zoom group supaya selalu full)
+  svg.insert('rect', ':first-child').attr('width', 700).attr('height', 440).attr('fill', '#0a1628').attr('rx', 10);
+
+  const zoomBehavior = d3.zoom()
+    .scaleExtent([1, 8])
+    .translateExtent([[0,0],[700,440]])
+    .on('zoom', (event) => {
+      zoomG.attr('transform', event.transform);
+    })
+    .on('start', () => svg.style('cursor','grabbing'))
+    .on('end', () => svg.style('cursor','grab'));
+
+  svg.call(zoomBehavior);
+
+  // Simpan referensi global untuk tombol zoom in/out/reset
+  window._mishoaZoom = { svg, behavior: zoomBehavior };
 
   // Gambar pulau-pulau Indonesia dengan path SVG yang akurat
   const islands = [
@@ -948,7 +1020,7 @@ function renderMapTab() {
 
   // Render pulau
   islands.forEach(isl => {
-    svg.append('path').attr('d', isl.d).attr('fill', isl.fill).attr('stroke', '#2a4a2a').attr('stroke-width', 0.8);
+    zoomG.append('path').attr('d', isl.d).attr('fill', isl.fill).attr('stroke', '#2a4a2a').attr('stroke-width', 0.8);
   });
 
   // Garis rute pengiriman antar kota utama
@@ -962,7 +1034,7 @@ function renderMapTab() {
   routes.forEach(([a,b]) => {
     const pa = cityPos[a], pb = cityPos[b];
     if(!pa||!pb) return;
-    svg.append('line')
+    zoomG.append('line')
       .attr('x1',pa[0]).attr('y1',pa[1]).attr('x2',pb[0]).attr('y2',pb[1])
       .attr('stroke','rgba(232,89,12,0.15)').attr('stroke-width',1)
       .attr('stroke-dasharray','3,4');
@@ -973,7 +1045,7 @@ function renderMapTab() {
     const stat = bk[city] || { orders:0, omset:0 };
     const r = Math.max(6, Math.min(22, 6 + (stat.orders/maxO)*17));
     const col = stat.orders>30?'#E8590C':stat.orders>=10?'#EF9F27':'#2D9D78';
-    const g = svg.append('g').attr('cursor','pointer');
+    const g = zoomG.append('g').attr('cursor','pointer');
 
     if(stat.orders >= 10){
       g.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r+5)
@@ -1108,8 +1180,16 @@ async function submitUpdate() {
 function showSection(name, el) {
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mob-nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('section-'+name).classList.add('active');
   if(el) el.classList.add('active');
+  // Sync mobile nav
+  const mob = document.getElementById('mob-'+name);
+  if(mob) mob.classList.add('active');
+  // Sync sidebar nav
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'")) n.classList.add('active');
+  });
   if(name==='settings'){
     document.getElementById('scriptUrl').value = config.scriptUrl;
     document.getElementById('targetInput').value = config.target;
