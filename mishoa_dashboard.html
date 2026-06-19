@@ -383,6 +383,12 @@
           </div>
         </div>
       </div>
+      <div class="card" style="padding:24px;max-width:540px;margin-top:14px;border-color:#7f1d1d;">
+        <div style="font-size:15px;font-weight:500;margin-bottom:8px;color:#f87171;">⚠️ Zona Berbahaya</div>
+        <div style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.6;">Hapus semua data pesanan (termasuk data simulasi/testing) dari Google Sheets. Tindakan ini <strong>tidak bisa dibatalkan</strong>.</div>
+        <button class="btn" style="background:#7f1d1d;color:#fff;" onclick="confirmResetData()">🗑️ Hapus Semua Data Pesanan</button>
+        <div id="resetResult" style="margin-top:12px;font-size:12px;"></div>
+      </div>
     </div>
 
   </div>
@@ -549,6 +555,39 @@ function updateConnStatus(ok) {
     ? '<span style="width:7px;height:7px;background:#4ade80;border-radius:50%;display:inline-block;"></span> Terhubung'
     : '<span style="width:7px;height:7px;background:#f87171;border-radius:50%;display:inline-block;"></span> Tidak terhubung';
   el.style.color = ok ? '#4ade80' : '#f87171';
+}
+
+// ================================================================
+//  RESET DATA
+// ================================================================
+function confirmResetData() {
+  const resultEl = document.getElementById('resetResult');
+  resultEl.innerHTML = `
+    <div style="background:#1a0d0d;border:1px solid #7f1d1d;border-radius:8px;padding:14px;margin-top:4px;">
+      <div style="color:#f87171;font-weight:500;margin-bottom:10px;">Yakin hapus SEMUA data pesanan?</div>
+      <div style="color:#999;font-size:11px;margin-bottom:12px;">Ini akan menghapus seluruh riwayat di Google Sheets. Tidak bisa dikembalikan.</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" style="background:#7f1d1d;color:#fff;" onclick="executeResetData()">Ya, Hapus Semua</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('resetResult').innerHTML=''">Batal</button>
+      </div>
+    </div>`;
+}
+
+async function executeResetData() {
+  const resultEl = document.getElementById('resetResult');
+  resultEl.innerHTML = '<span style="color:#fbbf24;">Menghapus data...</span>';
+  try {
+    if (config.scriptUrl) {
+      await apiFetch('reset_all');
+    }
+    allOrders = [];
+    summaryData = { kpi:{}, byProduct:{}, byKota:{}, byDate:{} };
+    resultEl.innerHTML = '<span style="color:#4ade80;">✓ Semua data berhasil dihapus.</span>';
+    renderAll();
+    showToast('Semua data pesanan telah dihapus');
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:#f87171;">✗ Gagal hapus: ${e.message}</span>`;
+  }
 }
 
 // ================================================================
