@@ -73,7 +73,6 @@
   const subtitle = document.getElementById('subtitle');
 
   let chromeUrl = TARGET_URL;
-  let alreadyTried = false;
 
   if (isAndroid) {
     chromeUrl = `intent://${TARGET_URL.replace('https://','')}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(TARGET_URL)};end`;
@@ -82,32 +81,19 @@
   } else if (isIOS) {
     chromeUrl = TARGET_URL;
     title.textContent = 'Membuka di Safari...';
-    subtitle.textContent = 'Jika tidak otomatis terbuka, ketuk tombol di bawah';
+    subtitle.textContent = 'Ketuk tombol di bawah untuk lanjut pemesanan';
     primaryBtn.textContent = '👉 Buka di Safari';
   } else {
     // Desktop - langsung redirect, tidak perlu tombol
     window.location.href = TARGET_URL;
   }
 
-  primaryBtn.href = chromeUrl;
-
-  function doRedirect() {
-    if (alreadyTried) return;
-    alreadyTried = true;
-    window.location.href = chromeUrl;
-  }
-
-  primaryBtn.addEventListener('click', function(e){
-    e.preventDefault();
-    doRedirect();
-  });
+  // href diset langsung supaya tombol selalu bisa diklik kapan saja, tanpa logika tambahan
+  primaryBtn.setAttribute('href', chromeUrl);
 
   if (isInAppBrowser) {
     title.textContent = 'Buka di browser utama';
     subtitle.textContent = 'Kamu sedang di dalam aplikasi (Instagram/Facebook/dll). Ketuk tombol di bawah untuk pemesanan yang lancar.';
-  } else if (isAndroid || isIOS) {
-    // Auto redirect sekali saja setelah delay singkat, tanpa menunggu klik
-    setTimeout(doRedirect, 500);
   }
 </script>
 
