@@ -72,39 +72,42 @@
   const title = document.getElementById('title');
   const subtitle = document.getElementById('subtitle');
 
+  let chromeUrl = TARGET_URL;
+  let alreadyTried = false;
+
   if (isAndroid) {
-    // Coba buka otomatis via Chrome intent
+    chromeUrl = `intent://${TARGET_URL.replace('https://','')}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(TARGET_URL)};end`;
     title.textContent = 'Membuka di Chrome...';
     primaryBtn.textContent = '👉 Buka di Chrome';
-    primaryBtn.href = `intent://${TARGET_URL.replace('https://','')}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(TARGET_URL)};end`;
-
-    // Auto redirect kalau bukan dari in-app browser (langsung buka)
-    if (!isInAppBrowser) {
-      setTimeout(() => {
-        window.location.href = primaryBtn.href;
-      }, 600);
-    }
   } else if (isIOS) {
-    // iOS tidak support intent://, langsung pakai link biasa
+    chromeUrl = TARGET_URL;
     title.textContent = 'Membuka di Safari...';
     subtitle.textContent = 'Jika tidak otomatis terbuka, ketuk tombol di bawah';
     primaryBtn.textContent = '👉 Buka di Safari';
-    primaryBtn.href = TARGET_URL;
-    primaryBtn.target = '_blank';
-
-    if (!isInAppBrowser) {
-      setTimeout(() => {
-        window.location.href = TARGET_URL;
-      }, 600);
-    }
   } else {
-    // Desktop atau browser lain - langsung redirect saja
+    // Desktop - langsung redirect, tidak perlu tombol
     window.location.href = TARGET_URL;
   }
+
+  primaryBtn.href = chromeUrl;
+
+  function doRedirect() {
+    if (alreadyTried) return;
+    alreadyTried = true;
+    window.location.href = chromeUrl;
+  }
+
+  primaryBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    doRedirect();
+  });
 
   if (isInAppBrowser) {
     title.textContent = 'Buka di browser utama';
     subtitle.textContent = 'Kamu sedang di dalam aplikasi (Instagram/Facebook/dll). Ketuk tombol di bawah untuk pemesanan yang lancar.';
+  } else if (isAndroid || isIOS) {
+    // Auto redirect sekali saja setelah delay singkat, tanpa menunggu klik
+    setTimeout(doRedirect, 500);
   }
 </script>
 
