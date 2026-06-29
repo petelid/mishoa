@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mishoa.id — Rute Driver</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Inter',sans-serif; background:#0d0d0d; color:#f0f0f0; padding-bottom:40px; }
+  ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track{ background:#1a1a1a; } ::-webkit-scrollbar-thumb{ background:#333; border-radius:3px; }
+
+  .topbar { position:sticky; top:0; z-index:30; background:#0d0d0d; border-bottom:1px solid #1a1a1a; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .topbar .brand { display:flex; align-items:center; gap:10px; }
+  .topbar .brand span.emoji { font-size:22px; }
+  .topbar .brand div b { font-size:14px; font-weight:600; display:block; }
+  .topbar .brand div small { font-size:10px; color:#555; }
+
+  .wrap { max-width:880px; margin:0 auto; padding:18px 16px; }
+
+  .card { background:#161616; border:1px solid #222; border-radius:12px; padding:16px; margin-bottom:14px; }
+  .card h3 { font-size:13px; font-weight:600; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+
+  .form-label { display:block; font-size:11px; color:#777; margin-bottom:5px; text-transform:uppercase; letter-spacing:.05em; }
+  .form-input, select.form-input { width:100%; background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:9px 12px; color:#f0f0f0; font-size:13px; font-family:'Inter',sans-serif; }
+  .form-input:focus { outline:none; border-color:#E8590C; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:140px; }
+
+  .chk { display:flex; align-items:center; gap:6px; font-size:12px; color:#bbb; background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:8px 12px; cursor:pointer; user-select:none; }
+  .chk input { accent-color:#E8590C; }
+  .chk.checked { border-color:#E8590C; color:#f0f0f0; }
+
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; border:none; }
+  .btn-primary { background:#E8590C; color:#fff; }
+  .btn-primary:hover { background:#c94d09; }
+  .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-ghost { background:transparent; color:#999; border:1px solid #333; }
+  .btn-ghost:hover { background:#1a1a1a; color:#f0f0f0; }
+  .btn-sm { padding:6px 11px; font-size:11px; border-radius:6px; }
+  .btn-block { width:100%; justify-content:center; }
+
+  .pill { font-size:10px; padding:3px 9px; border-radius:20px; font-weight:500; display:inline-block; white-space:nowrap; }
+  .pill-done { background:#052e16; color:#4ade80; }
+  .pill-proc { background:#1c1917; color:#fbbf24; }
+  .pill-ship { background:#0c1a2e; color:#60a5fa; }
+  .pill-cancel { background:#1f0909; color:#f87171; }
+
+  #map { width:100%; height:340px; border-radius:10px; background:#0a1628; }
+
+  .stop { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #1a1a1a; align-items:flex-start; }
+  .stop:last-child { border-bottom:none; }
+  .stop .num { flex-shrink:0; width:26px; height:26px; border-radius:50%; background:#E8590C; color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .stop .body { flex:1; min-width:0; }
+  .stop .nm { font-size:13px; font-weight:600; }
+  .stop .addr { font-size:12px; color:#999; margin-top:2px; }
+  .stop .meta { font-size:11px; color:#666; margin-top:4px; }
+  .stop .actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+
+  .loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:30px; color:#666; font-size:13px; }
+  .spinner { width:18px; height:18px; border:2px solid #333; border-top-color:#E8590C; border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to{ transform:rotate(360deg); } }
+
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(10px); background:#1a1a1a; border:1px solid #333; border-radius:10px; padding:11px 18px; font-size:12px; z-index:200; opacity:0; transition:all .25s; pointer-events:none; max-width:90vw; text-align:center; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .summary { display:flex; gap:18px; flex-wrap:wrap; font-size:12px; color:#999; }
+  .summary b { color:#f0f0f0; font-size:14px; }
+
+  .empty { text-align:center; padding:30px; color:#555; font-size:13px; }
+  a.linklike { color:#E8590C; text-decoration:none; font-size:12px; cursor:pointer; }
+  .leaflet-div-icon { background:transparent; border:none; }
+  .pin-num { width:26px; height:26px; border-radius:50%; background:#E8590C; color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.5); }
+  .pin-depot { width:26px; height:26px; border-radius:50%; background:#161616; color:#fff; font-size:14px; display:flex; align-items:center; justify-content:center; border:2px solid #E8590C; box-shadow:0 1px 4px rgba(0,0,0,.5); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="emoji">🚚</span>
+    <div><b>Rute Driver</b><small>Mishoa.id</small></div>
+  </div>
+  <a class="btn btn-ghost btn-sm" href="mishoa_dashboard.html">← Dashboard</a>
+</div>
+
+<div class="wrap">
+
+  <!-- SETTINGS -->
+  <div class="card">
+    <h3>⚙️ Pengaturan</h3>
+    <div class="row" style="margin-bottom:10px;">
+      <div>
+        <label class="form-label">Alamat Gudang / Toko (titik berangkat)</label>
+        <input id="depotAddr" class="form-input" placeholder="Contoh: Jl. Mawar No. 5, Bekasi">
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn btn-primary btn-sm" onclick="setDepot()">📍 Simpan & Cari Lokasi Gudang</button>
+      <span id="depotStatus" style="font-size:11px;color:#666;align-self:center;"></span>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="card">
+    <h3>🔎 Filter Pesanan</h3>
+    <div class="row" style="margin-bottom:10px;">
+      <div>
+        <label class="form-label">Rentang Order</label>
+        <select id="rangeSel" class="form-input">
+          <option value="1">Hari Ini</option>
+          <option value="3">3 Hari Terakhir</option>
+          <option value="7">Minggu Ini</option>
+          <option value="90">Semua Order Aktif</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Kota (opsional)</label>
+        <input id="kotaFilter" class="form-input" placeholder="Contoh: Bekasi">
+      </div>
+    </div>
+    <label class="form-label">Status yang diantar</label>
+    <div class="row" style="margin-bottom:6px;">
+      <label class="chk checked"><input type="checkbox" value="Diproses" checked onchange="toggleChk(this)"> Diproses</label>
+      <label class="chk checked"><input type="checkbox" value="Dikirim" checked onchange="toggleChk(this)"> Dikirim</label>
+      <label class="chk"><input type="checkbox" value="Selesai" onchange="toggleChk(this)"> Selesai</label>
+      <label class="chk"><input type="checkbox" value="Dibatalkan" onchange="toggleChk(this)"> Dibatalkan</label>
+    </div>
+    <label class="chk" id="returnChkWrap" style="margin-top:6px;width:fit-content;">
+      <input type="checkbox" id="returnDepot"> Kembali ke gudang setelah stop terakhir
+    </label>
+    <div style="margin-top:14px;">
+      <button class="btn btn-primary btn-block" id="buildBtn" onclick="buildRoute()">🧭 Susun Rute Optimal</button>
+    </div>
+  </div>
+
+  <!-- STATUS / PROGRESS -->
+  <div id="progressBox"></div>
+
+  <!-- RESULT -->
+  <div id="resultBox"></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+//  CONFIG (pakai script URL yang sama dengan dashboard)
+// ================================================================
+const config = {
+  scriptUrl: localStorage.getItem('mishoa_script_url') || ''
+};
+
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? '#7f1d1d' : '#333';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ================================================================
+//  API (sama persis dengan dashboard)
+// ================================================================
+async function apiFetch(action, params={}) {
+  if (!config.scriptUrl) throw new Error('Script URL belum diset. Buka Dashboard → Pengaturan dulu untuk menghubungkan Google Sheets.');
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(config.scriptUrl + '?' + qs);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+// ================================================================
+//  GEOCODING (Nominatim/OpenStreetMap, gratis, dengan cache)
+// ================================================================
+function getGeoCache() {
+  try { return JSON.parse(localStorage.getItem('mishoa_geocode_cache') || '{}'); } catch(e) { return {}; }
+}
+function saveGeoCache(cache) {
+  localStorage.setItem('mishoa_geocode_cache', JSON.stringify(cache));
+}
+function normKey(s) { return (s||'').trim().toLowerCase(); }
+
+async function geocodeOne(addressText) {
+  const cache = getGeoCache();
+  const key = normKey(addressText);
+  if (cache[key]) return cache[key];
+
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=id&q=' + encodeURIComponent(addressText);
+  const res = await fetch(url, { headers: { 'Accept-Language': 'id' } });
+  const data = await res.json();
+  if (data && data.length > 0) {
+    const geo = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    cache[key] = geo;
+    saveGeoCache(cache);
+    return geo;
+  }
+  return null;
+}
+
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// Geocode berurutan (Nominatim minta max ~1 request/detik)
+async function geocodeAll(items, onProgress) {
+  const results = [];
+  for (let i=0; i<items.length; i++) {
+    let geo = null;
+    try { geo = await geocodeOne(items[i]); } catch(e) { geo = null; }
+    results.push(geo);
+    if (onProgress) onProgress(i+1, items.length);
+    if (i < items.length-1) await sleep(1100);
+  }
+  return results;
+}
+
+// ================================================================
+//  DEPOT
+// ================================================================
+function loadDepot() {
+  const addr = localStorage.getItem('mishoa_depot_alamat') || '';
+  const geo  = JSON.parse(localStorage.getItem('mishoa_depot_geo') || 'null');
+  document.getElementById('depotAddr').value = addr;
+  document.getElementById('depotStatus').textContent = geo ? '✓ Lokasi tersimpan' : '';
+  return { addr, geo };
+}
+
+async function setDepot() {
+  const addr = document.getElementById('depotAddr').value.trim();
+  const statusEl = document.getElementById('depotStatus');
+  if (!addr) {
+    localStorage.removeItem('mishoa_depot_alamat');
+    localStorage.removeItem('mishoa_depot_geo');
+    statusEl.textContent = 'Dikosongkan (rute mulai dari stop pertama)';
+    return;
+  }
+  statusEl.textContent = 'Mencari lokasi...';
+  try {
+    const geo = await geocodeOne(addr);
+    if (!geo) { statusEl.textContent = '✗ Alamat tidak ditemukan, coba lebih spesifik'; return; }
+    localStorage.setItem('mishoa_depot_alamat', addr);
+    localStorage.setItem('mishoa_depot_geo', JSON.stringify(geo));
+    statusEl.textContent = '✓ Lokasi gudang tersimpan';
+    showToast('Lokasi gudang disimpan');
+  } catch(e) {
+    statusEl.textContent = '✗ Gagal: ' + e.message;
+  }
+}
+
+// ================================================================
+//  FILTER CHECKBOXES
+// ================================================================
+function toggleChk(input) {
+  input.closest('.chk').classList.toggle('checked', input.checked);
+}
+function getCheckedStatuses() {
+  return Array.from(document.querySelectorAll('.chk input[type=checkbox]'))
+    .filter(c => c.checked).map(c => c.value);
+}
+
+// ================================================================
+//  ROUTE MATH
+// ================================================================
+function haversine(a, b) {
+  const R = 6371;
+  const dLat = (b.lat-a.lat) * Math.PI/180;
+  const dLng = (b.lng-a.lng) * Math.PI/180;
+  const s = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+// points[0] = titik mulai (fixed). Mengembalikan urutan index (termasuk index 0 di posisi awal).
+function nearestNeighborOrder(points) {
+  const n = points.length;
+  const visited = new Array(n).fill(false);
+  visited[0] = true;
+  const order = [0];
+  let current = 0;
+  for (let step=1; step<n; step++) {
+    let best = -1, bestDist = Infinity;
+    for (let i=0; i<n; i++) {
+      if (visited[i]) continue;
+      const d = haversine(points[current], points[i]);
+      if (d < bestDist) { bestDist = d; best = i; }
+    }
+    visited[best] = true;
+    order.push(best);
+    current = best;
+  }
+  return order;
+}
+
+function pathLength(order, points) {
+  let total = 0;
+  for (let i=0; i<order.length-1; i++) total += haversine(points[order[i]], points[order[i+1]]);
+  return total;
+}
+
+// 2-opt sederhana, posisi 0 (titik mulai) tetap di awal
+function twoOpt(order, points) {
+  let improved = true;
+  let iter = 0;
+  while (improved && iter < 200) {
+    improved = false;
+    iter++;
+    for (let i=1; i<order.length-2; i++) {
+      for (let j=i+1; j<order.length-1; j++) {
+        const a=order[i-1], b=order[i], c=order[j], d=order[j+1];
+        const before = haversine(points[a],points[b]) + haversine(points[c],points[d]);
+        const after  = haversine(points[a],points[c]) + haversine(points[b],points[d]);
+        if (after + 0.0001 < before) {
+          const seg = order.slice(i, j+1).reverse();
+          order = order.slice(0,i).concat(seg, order.slice(j+1));
+          improved = true;
+        }
+      }
+    }
+  }
+  return order;
+}
+
+// ================================================================
+//  PHONE HELPERS
+// ================================================================
+function toWaNumber(phone) {
+  let p = (phone||'').replace(/\D/g,'');
+  if (p.startsWith('0')) p = '62' + p.slice(1);
+  if (p.startsWith('620')) p = '62' + p.slice(3);
+  return p;
+}
+
+// ================================================================
+//  MAIN: SUSUN RUTE
+// ================================================================
+let mapInstance = null;
+let currentRoutePoints = null; // {lat,lng} array sesuai currentRouteOrders index
+let currentRouteOrders = null; // array order objek sesuai urutan final (tanpa depot)
+
+async function buildRoute() {
+  const btn = document.getElementById('buildBtn');
+  const progressBox = document.getElementById('progressBox');
+  const resultBox = document.getElementById('resultBox');
+  btn.disabled = true;
+  resultBox.innerHTML = '';
+  progressBox.innerHTML = '<div class="card loading"><div class="spinner"></div> Mengambil data pesanan...</div>';
+
+  try {
+    const days = document.getElementById('rangeSel').value;
+    const kota = document.getElementById('kotaFilter').value.trim();
+    const statuses = getCheckedStatuses();
+
+    const res = await apiFetch('orders', { days, kota });
+    let orders = (res.orders || []).filter(o => statuses.includes(o.status));
+
+    if (orders.length === 0) {
+      progressBox.innerHTML = '';
+      resultBox.innerHTML = '<div class="card empty">Tidak ada pesanan yang cocok dengan filter ini.</div>';
+      btn.disabled = false;
+      return;
+    }
+
+    // Geocode tiap alamat unik
+    const addrTexts = orders.map(o => `${o.alamat}, ${o.kota}, Indonesia`);
+    const geos = await geocodeAll(addrTexts, (done,total) => {
+      progressBox.innerHTML = `<div class="card loading"><div class="spinner"></div> Mencari lokasi alamat... (${done}/${total})</div>`;
+    });
+
+    // Buang order yang gagal di-geocode, kasih tahu user
+    const validOrders = [], validGeos = [];
+    let failedCount = 0;
+    orders.forEach((o,i) => {
+      if (geos[i]) { validOrders.push(o); validGeos.push(geos[i]); }
+      else failedCount++;
+    });
+
+    if (validOrders.length === 0) {
+      progressBox.innerHTML = '';
+      resultBox.innerHTML = '<div class="card empty">Tidak ada alamat yang berhasil ditemukan lokasinya. Coba lengkapi alamat (nama jalan + kota).</div>';
+      btn.disabled = false;
+      return;
+    }
+
+    const depot = JSON.parse(localStorage.getItem('mishoa_depot_geo') || 'null');
+    const returnToDepot = document.getElementById('returnDepot').checked;
+
+    // points[0] = start. Kalau ada depot, depot jadi start; kalau tidak, stop pertama jadi start.
+    let points, orderOffset;
+    if (depot) {
+      points = [depot, ...validGeos];
+      orderOffset = 1; // index 0 = depot
+    } else {
+      points = [...validGeos];
+      orderOffset = 0;
+    }
+
+    let order = points.length > 2 ? twoOpt(nearestNeighborOrder(points), points) : nearestNeighborOrder(points);
+
+    // Susun ulang validOrders & validGeos sesuai urutan optimal (skip index depot)
+    const finalOrders = [], finalGeos = [];
+    order.forEach(idx => {
+      if (depot && idx === 0) return;
+      const oi = idx - orderOffset;
+      finalOrders.push(validOrders[oi]);
+      finalGeos.push(validGeos[oi]);
+    });
+
+    currentRouteOrders = finalOrders;
+    currentRoutePoints = finalGeos;
+
+    const totalKm = pathLength(order, points) + (returnToDepot && depot ? haversine(finalGeos[finalGeos.length-1], depot) : 0);
+
+    progressBox.innerHTML = '';
+    renderResult(finalOrders, finalGeos, depot, totalKm, failedCount, returnToDepot);
+
+  } catch(e) {
+    progressBox.innerHTML = '';
+    resultBox.innerHTML = `<div class="card" style="color:#f87171;">✗ Gagal menyusun rute: ${e.message}</div>`;
+  }
+  btn.disabled = false;
+}
+
+// ================================================================
+//  RENDER RESULT (map + list)
+// ================================================================
+function renderResult(orders, geos, depot, totalKm, failedCount, returnToDepot) {
+  const resultBox = document.getElementById('resultBox');
+
+  const gmapsLinks = buildGmapsLinks(orders, geos, depot, returnToDepot);
+
+  let html = `
+    <div class="card">
+      <div class="summary" style="margin-bottom:12px;">
+        <div><b>${orders.length}</b> stop</div>
+        <div><b>${totalKm.toFixed(1)} km</b> estimasi jarak</div>
+        ${failedCount > 0 ? `<div style="color:#fbbf24;">⚠ ${failedCount} alamat tidak ketemu</div>` : ''}
+      </div>
+      <div id="map"></div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        ${gmapsLinks.map((l,i) => `<a class="btn btn-primary btn-sm" target="_blank" href="${l}">🗺️ Buka di Google Maps${gmapsLinks.length>1 ? ' (bagian '+(i+1)+')' : ''}</a>`).join('')}
+      </div>
+      <div style="font-size:11px;color:#555;margin-top:8px;">💡 Geser pin di peta kalau lokasinya kurang tepat — koreksi akan tersimpan otomatis.</div>
+    </div>
+    <div class="card">
+      <h3>📋 Urutan Stop</h3>
+      <div id="stopList"></div>
+    </div>
+  `;
+  resultBox.innerHTML = html;
+
+  renderMap(orders, geos, depot);
+  renderStopList(orders);
+}
+
+function renderMap(orders, geos, depot) {
+  if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+  mapInstance = L.map('map', { scrollWheelZoom:false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 18
+  }).addTo(mapInstance);
+
+  const bounds = [];
+  const latlngs = [];
+
+  if (depot) {
+    const depotIcon = L.divIcon({ className:'leaflet-div-icon', html:'<div class="pin-depot">🏠</div>', iconSize:[26,26] });
+    const m = L.marker([depot.lat, depot.lng], { icon: depotIcon, draggable:true }).addTo(mapInstance).bindPopup('Gudang / Toko');
+    m.on('dragend', e => {
+      const ll = e.target.getLatLng();
+      const geo = { lat: ll.lat, lng: ll.lng };
+      localStorage.setItem('mishoa_depot_geo', JSON.stringify(geo));
+      showToast('Lokasi gudang dikoreksi. Susun ulang rute untuk update jarak.');
+    });
+    bounds.push([depot.lat, depot.lng]);
+    latlngs.push([depot.lat, depot.lng]);
+  }
+
+  orders.forEach((o, i) => {
+    const g = geos[i];
+    const icon = L.divIcon({ className:'leaflet-div-icon', html:`<div class="pin-num">${i+1}</div>`, iconSize:[26,26] });
+    const m = L.marker([g.lat, g.lng], { icon, draggable:true }).addTo(mapInstance)
+      .bindPopup(`<b>${i+1}. ${o.nama}</b><br>${o.alamat}`);
+    m.on('dragend', e => {
+      const ll = e.target.getLatLng();
+      const cache = getGeoCache();
+      const key = normKey(`${o.alamat}, ${o.kota}, Indonesia`);
+      cache[key] = { lat: ll.lat, lng: ll.lng };
+      saveGeoCache(cache);
+      showToast(`Lokasi "${o.nama}" dikoreksi. Susun ulang rute untuk update jarak.`);
+    });
+    bounds.push([g.lat, g.lng]);
+    latlngs.push([g.lat, g.lng]);
+  });
+
+  if (latlngs.length > 1) L.polyline(latlngs, { color:'#E8590C', weight:3, opacity:0.7 }).addTo(mapInstance);
+  if (bounds.length) mapInstance.fitBounds(bounds, { padding:[30,30] });
+  else mapInstance.setView([-6.2,106.8], 11);
+}
+
+function renderStopList(orders) {
+  const sMap = {'Selesai':'pill-done','Diproses':'pill-proc','Dikirim':'pill-ship','Dibatalkan':'pill-cancel'};
+  const list = document.getElementById('stopList');
+  list.innerHTML = orders.map((o,i) => {
+    const wa = toWaNumber(o.no_hp);
+    return `
+    <div class="stop">
+      <div class="num">${i+1}</div>
+      <div class="body">
+        <div class="nm">${o.nama} <span class="pill ${sMap[o.status]||'pill-proc'}" style="margin-left:6px;">${o.status}</span></div>
+        <div class="addr">${o.alamat}, ${o.kota}</div>
+        <div class="meta">${o.pesanan} · Rp${Math.round(o.total).toLocaleString('id-ID')}</div>
+        <div class="actions">
+          ${wa ? `<a class="btn btn-ghost btn-sm" target="_blank" href="https://wa.me/${wa}">💬 WA</a>` : ''}
+          ${o.no_hp ? `<a class="btn btn-ghost btn-sm" href="tel:${o.no_hp}">📞 Telepon</a>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="markStatus('${o.order_id}','Dikirim',this)">🚚 Dikirim</button>
+          <button class="btn btn-primary btn-sm" onclick="markStatus('${o.order_id}','Selesai',this)">✓ Selesai</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">Tidak ada stop.</div>';
+}
+
+async function markStatus(orderId, status, btn) {
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    await apiFetch('update', { id: orderId, status });
+    showToast(`Order ${orderId} ditandai "${status}"`);
+    btn.closest('.stop').style.opacity = 0.5;
+  } catch(e) {
+    showToast('Gagal update: ' + e.message, true);
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
+// ================================================================
+//  GOOGLE MAPS LINK BUILDER (maks 9 waypoint per link)
+// ================================================================
+function buildGmapsLinks(orders, geos, depot, returnToDepot) {
+  const allPoints = [];
+  if (depot) allPoints.push(depot);
+  geos.forEach(g => allPoints.push(g));
+  if (returnToDepot && depot) allPoints.push(depot);
+
+  if (allPoints.length < 2) {
+    // Cuma 1 titik tujuan, tanpa depot
+    const g = geos[0];
+    return [`https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lng}&travelmode=driving`];
+  }
+
+  const links = [];
+  const MAX_WP = 9; // batas waypoint Google Maps URL (selain origin & destination)
+  let i = 0;
+  while (i < allPoints.length - 1) {
+    const chunk = allPoints.slice(i, i + MAX_WP + 2); // origin + up to 9 wp + destination
+    const origin = chunk[0];
+    const destination = chunk[chunk.length - 1];
+    const waypoints = chunk.slice(1, -1);
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&travelmode=driving`;
+    if (waypoints.length) url += `&waypoints=${waypoints.map(p=>`${p.lat},${p.lng}`).join('|')}`;
+    links.push(url);
+    i += chunk.length - 1;
+  }
+  return links;
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+loadDepot();
+if (!config.scriptUrl) {
+  document.getElementById('progressBox').innerHTML = '<div class="card" style="color:#fbbf24;">⚠ Script URL belum terhubung. Buka Dashboard → tab Pengaturan, sambungkan ke Google Sheets dulu, lalu kembali ke halaman ini.</div>';
+}
+</script>
+
+</body>
+</html>
