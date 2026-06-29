@@ -120,6 +120,10 @@
         <label class="form-label">Kota (opsional)</label>
         <input id="kotaFilter" class="form-input" placeholder="Contoh: Bekasi">
       </div>
+      <div>
+        <label class="form-label">Radius Maks dari Gudang (km)</label>
+        <input id="radiusFilter" type="number" min="0" class="form-input" placeholder="Kosongkan = tanpa batas">
+      </div>
     </div>
     <label class="form-label">Status yang diantar</label>
     <div class="row" style="margin-bottom:6px;">
@@ -383,27 +387,51 @@ async function buildRoute() {
     }
 
     const depot = JSON.parse(localStorage.getItem('mishoa_depot_geo') || 'null');
+
+    // Filter radius maksimal dari gudang (order yang lebih jauh dianggap dikirim via kurir, bukan diantar sendiri)
+    const radiusKm = parseFloat(document.getElementById('radiusFilter').value);
+    let inRangeOrders = validOrders, inRangeGeos = validGeos, farCount = 0;
+    if (radiusKm && radiusKm > 0) {
+      if (!depot) {
+        progressBox.innerHTML = '';
+        resultBox.innerHTML = '<div class="card" style="color:#fbbf24;">⚠ Set alamat gudang dulu di atas untuk pakai filter radius.</div>';
+        btn.disabled = false;
+        return;
+      }
+      inRangeOrders = []; inRangeGeos = [];
+      validOrders.forEach((o,i) => {
+        if (haversine(depot, validGeos[i]) <= radiusKm) { inRangeOrders.push(o); inRangeGeos.push(validGeos[i]); }
+        else farCount++;
+      });
+      if (inRangeOrders.length === 0) {
+        progressBox.innerHTML = '';
+        resultBox.innerHTML = `<div class="card empty">Semua ${validOrders.length} order di luar radius ${radiusKm} km — kemungkinan harus dikirim via kurir, bukan diantar sendiri.</div>`;
+        btn.disabled = false;
+        return;
+      }
+    }
+
     const returnToDepot = document.getElementById('returnDepot').checked;
 
     // points[0] = start. Kalau ada depot, depot jadi start; kalau tidak, stop pertama jadi start.
     let points, orderOffset;
     if (depot) {
-      points = [depot, ...validGeos];
+      points = [depot, ...inRangeGeos];
       orderOffset = 1; // index 0 = depot
     } else {
-      points = [...validGeos];
+      points = [...inRangeGeos];
       orderOffset = 0;
     }
 
     let order = points.length > 2 ? twoOpt(nearestNeighborOrder(points), points) : nearestNeighborOrder(points);
 
-    // Susun ulang validOrders & validGeos sesuai urutan optimal (skip index depot)
+    // Susun ulang inRangeOrders & inRangeGeos sesuai urutan optimal (skip index depot)
     const finalOrders = [], finalGeos = [];
     order.forEach(idx => {
       if (depot && idx === 0) return;
       const oi = idx - orderOffset;
-      finalOrders.push(validOrders[oi]);
-      finalGeos.push(validGeos[oi]);
+      finalOrders.push(inRangeOrders[oi]);
+      finalGeos.push(inRangeGeos[oi]);
     });
 
     currentRouteOrders = finalOrders;
@@ -412,7 +440,7 @@ async function buildRoute() {
     const totalKm = pathLength(order, points) + (returnToDepot && depot ? haversine(finalGeos[finalGeos.length-1], depot) : 0);
 
     progressBox.innerHTML = '';
-    renderResult(finalOrders, finalGeos, depot, totalKm, failedCount, returnToDepot);
+    renderResult(finalOrders, finalGeos, depot, totalKm, failedCount, returnToDepot, farCount);
 
   } catch(e) {
     progressBox.innerHTML = '';
@@ -424,7 +452,7 @@ async function buildRoute() {
 // ================================================================
 //  RENDER RESULT (map + list)
 // ================================================================
-function renderResult(orders, geos, depot, totalKm, failedCount, returnToDepot) {
+function renderResult(orders, geos, depot, totalKm, failedCount, returnToDepot, farCount) {
   const resultBox = document.getElementById('resultBox');
 
   const gmapsLinks = buildGmapsLinks(orders, geos, depot, returnToDepot);
@@ -435,6 +463,7 @@ function renderResult(orders, geos, depot, totalKm, failedCount, returnToDepot) 
         <div><b>${orders.length}</b> stop</div>
         <div><b>${totalKm.toFixed(1)} km</b> estimasi jarak</div>
         ${failedCount > 0 ? `<div style="color:#fbbf24;">⚠ ${failedCount} alamat tidak ketemu</div>` : ''}
+        ${farCount > 0 ? `<div style="color:#60a5fa;">📦 ${farCount} order di luar radius (pakai kurir)</div>` : ''}
       </div>
       <div id="map"></div>
       <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
