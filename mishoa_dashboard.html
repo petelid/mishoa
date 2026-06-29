@@ -367,6 +367,11 @@
           <label class="form-label">Target Omset per Bulan (Rp)</label>
           <input id="targetInput" class="form-input" type="number" placeholder="2000000" style="margin-top:6px;" value="2000000">
         </div>
+        <div style="margin-bottom:14px;">
+          <label class="form-label">Kata Sandi Rahasia (untuk Hapus Data)</label>
+          <input id="secretKeyInput" class="form-input" type="password" placeholder="Sama dengan SECRET_KEY di file .gs" style="margin-top:6px;">
+          <div style="font-size:11px;color:#555;margin-top:6px;">Harus sama persis dengan variabel SECRET_KEY di mishoa_appscript.gs. Tanpa ini, tombol Hapus Semua Data tidak akan jalan.</div>
+        </div>
         <div style="display:flex;gap:10px;">
           <button class="btn btn-primary" onclick="saveSettings()">Simpan & Tes Koneksi</button>
           <button class="btn btn-ghost" onclick="clearSettings()">Reset</button>
@@ -490,7 +495,8 @@ const CITIES = ['Jakarta','Bekasi','Bogor','Bandung','Yogyakarta','Surabaya','Se
 
 let config = {
   scriptUrl: localStorage.getItem('mishoa_script_url') || 'https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec',
-  target: parseInt(localStorage.getItem('mishoa_target') || '2000000')
+  target: parseInt(localStorage.getItem('mishoa_target') || '2000000'),
+  secretKey: localStorage.getItem('mishoa_secret_key') || ''
 };
 let currentRange = '7d';
 let allOrders = [];
@@ -523,11 +529,14 @@ function destroyChart(c) { try { if(c) c.destroy(); } catch(e){} }
 function saveSettings() {
   const url = document.getElementById('scriptUrl').value.trim();
   const target = parseInt(document.getElementById('targetInput').value) || 2000000;
+  const secretKey = document.getElementById('secretKeyInput').value.trim();
   if (!url) { document.getElementById('connTestResult').innerHTML = '<span style="color:#f87171;">URL tidak boleh kosong.</span>'; return; }
   localStorage.setItem('mishoa_script_url', url);
   localStorage.setItem('mishoa_target', target);
+  localStorage.setItem('mishoa_secret_key', secretKey);
   config.scriptUrl = url;
   config.target = target;
+  config.secretKey = secretKey;
   document.getElementById('connTestResult').innerHTML = '<span style="color:#fbbf24;">Menguji koneksi...</span>';
   testConnection();
 }
@@ -583,10 +592,15 @@ function confirmResetData() {
 
 async function executeResetData() {
   const resultEl = document.getElementById('resetResult');
+  if (!config.secretKey) {
+    resultEl.innerHTML = '<span style="color:#f87171;">✗ Isi dulu Kata Sandi Rahasia di atas (harus sama dengan SECRET_KEY di file .gs), lalu Simpan.</span>';
+    return;
+  }
   resultEl.innerHTML = '<span style="color:#fbbf24;">Menghapus data...</span>';
   try {
     if (config.scriptUrl) {
-      await apiFetch('reset_all');
+      const r = await apiFetch('reset_all', { key: config.secretKey });
+      if (r && r.success === false) throw new Error(r.error || 'Ditolak server');
     }
     allOrders = [];
     summaryData = { kpi:{}, byProduct:{}, byKota:{}, byDate:{} };
@@ -1240,6 +1254,7 @@ function showSection(name, el) {
   if(name==='settings'){
     document.getElementById('scriptUrl').value = config.scriptUrl;
     document.getElementById('targetInput').value = config.target;
+    document.getElementById('secretKeyInput').value = config.secretKey;
   }
 }
 
