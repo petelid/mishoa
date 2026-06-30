@@ -171,6 +171,12 @@ function showToast(msg, isError=false) {
 // ================================================================
 async function apiFetch(action, params={}) {
   if (!config.scriptUrl) throw new Error('Script URL belum diset. Buka Dashboard → Pengaturan dulu untuk menghubungkan Google Sheets.');
+  const sensitiveActions = ['update', 'reset_all'];
+  if (sensitiveActions.includes(action)) {
+    const secretKey = localStorage.getItem('mishoa_secret_key') || '';
+    if (!secretKey) throw new Error('Kata sandi rahasia belum diisi. Buka Dashboard → Pengaturan dulu.');
+    params = { ...params, key: secretKey };
+  }
   const qs = new URLSearchParams({ action, ...params }).toString();
   const res = await fetch(config.scriptUrl + '?' + qs);
   if (!res.ok) throw new Error('HTTP ' + res.status);
