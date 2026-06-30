@@ -292,7 +292,7 @@
         </div>
       </div>
       <div class="card" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-        <div id="orderTableWrap" style="min-width:680px;">
+        <div id="orderTableWrap" style="min-width:780px;">
           <div class="loading"><div class="spinner"></div> Memuat pesanan...</div>
         </div>
       </div>
@@ -617,7 +617,7 @@ async function executeResetData() {
 // ================================================================
 async function apiFetch(action, params = {}) {
   if (!config.scriptUrl) throw new Error('URL belum dikonfigurasi');
-  const sensitiveActions = ['update', 'reset_all'];
+  const sensitiveActions = ['update', 'reset_all', 'set_lunas'];
   if (sensitiveActions.includes(action)) {
     if (!config.secretKey) throw new Error('Kata sandi rahasia belum diisi di Pengaturan.');
     params = { ...params, key: config.secretKey };
@@ -896,8 +896,16 @@ function renderOrders() {
       </td>
       <td>${o.pesanan}</td>
       <td><span style="font-size:11px;">${o.kota||'—'}</span></td>
-      <td style="font-weight:500;">${fmtRp(o.subtotal||0)}</td>
+      <td style="font-weight:500;">
+        ${fmtRp(o.total||0)}
+        ${o.kode_unik ? `<div style="font-size:10px;color:#fbbf24;">+${o.kode_unik} kode unik</div>` : ''}
+      </td>
       <td><span class="pill ${sMap[o.status]||'pill-proc'}">${o.status||'Diproses'}</span></td>
+      <td>
+        <span class="pill ${o.lunas==='Lunas'?'pill-done':'pill-cancel'}" style="cursor:pointer;" onclick="toggleLunas('${o.order_id}','${o.lunas}',this)">
+          ${o.lunas==='Lunas' ? '✓ Lunas' : '○ Belum'}
+        </span>
+      </td>
       <td style="font-size:11px;color:#555;">${(o.timestamp||'').slice(0,10)}</td>
       <td>
         <button onclick="openUpdateModal('${o.order_id}','${o.status||'Diproses'}')" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;">Edit</button>
@@ -908,9 +916,9 @@ function renderOrders() {
   document.getElementById('orderTableWrap').innerHTML = `
     <table>
       <thead><tr>
-        <th>Order ID</th><th>Nama / HP</th><th>Pesanan</th><th>Kota</th><th>Subtotal</th><th>Status</th><th>Tanggal</th><th>Aksi</th>
+        <th>Order ID</th><th>Nama / HP</th><th>Pesanan</th><th>Kota</th><th>Total</th><th>Status</th><th>Bayar</th><th>Tanggal</th><th>Aksi</th>
       </tr></thead>
-      <tbody>${rows||'<tr><td colspan="8" style="text-align:center;color:#555;padding:32px;">Tidak ada pesanan ditemukan.</td></tr>'}</tbody>
+      <tbody>${rows||'<tr><td colspan="9" style="text-align:center;color:#555;padding:32px;">Tidak ada pesanan ditemukan.</td></tr>'}</tbody>
     </table>`;
 
   const pg = document.getElementById('orderPagination');
@@ -1213,6 +1221,22 @@ function openUpdateModal(orderId, currentStatus) {
   document.getElementById('updateModal').style.display = 'flex';
 }
 function closeUpdateModal() { document.getElementById('updateModal').style.display='none'; }
+
+async function toggleLunas(orderId, currentLunas, el) {
+  const newLunas = currentLunas === 'Lunas' ? 'Belum' : 'Lunas';
+  el.textContent = '...';
+  try {
+    await apiFetch('set_lunas', { id: orderId, lunas: newLunas });
+    const order = allOrders.find(o=>o.order_id===orderId);
+    if (order) order.lunas = newLunas;
+    el.textContent = newLunas==='Lunas' ? '✓ Lunas' : '○ Belum';
+    el.className = 'pill ' + (newLunas==='Lunas' ? 'pill-done' : 'pill-cancel');
+    showToast(newLunas==='Lunas' ? 'Ditandai Lunas ✓' : 'Ditandai Belum Bayar');
+  } catch(e) {
+    el.textContent = currentLunas==='Lunas' ? '✓ Lunas' : '○ Belum';
+    showToast('Gagal update: '+e.message, true);
+  }
+}
 
 async function submitUpdate() {
   const orderId = document.getElementById('u_orderId').value;
