@@ -617,6 +617,11 @@ async function executeResetData() {
 // ================================================================
 async function apiFetch(action, params = {}) {
   if (!config.scriptUrl) throw new Error('URL belum dikonfigurasi');
+  const sensitiveActions = ['update', 'reset_all'];
+  if (sensitiveActions.includes(action)) {
+    if (!config.secretKey) throw new Error('Kata sandi rahasia belum diisi di Pengaturan.');
+    params = { ...params, key: config.secretKey };
+  }
   const qs = new URLSearchParams({ action, ...params }).toString();
   const url = config.scriptUrl + '?' + qs;
   const res = await fetch(url);
