@@ -349,15 +349,10 @@ async function checkout(){
 
   let serverResult = null
   try {
-    // PENTING: Content-Type text/plain (bukan application/json) supaya browser
-    // TIDAK kirim preflight OPTIONS request — Apps Script tidak bisa menjawab preflight,
-    // jadi kalau pakai application/json + mode normal, request akan gagal kena CORS.
-    // Dan TIDAK pakai mode:"no-cors" lagi, supaya respons server (kode unik, total resmi) bisa dibaca.
-    const res = await fetch("https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec", {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(webhookData)
-    })
+    // Pakai GET (bukan POST) — sudah terbukti jalan mulus tanpa masalah CORS,
+    // sama seperti yang dipakai dashboard untuk ambil data order.
+    const qs = new URLSearchParams({ action: "create_order", ...webhookData }).toString()
+    const res = await fetch("https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec?" + qs)
     serverResult = await res.json()
   } catch(err) {
     console.log("Webhook error:", err)
