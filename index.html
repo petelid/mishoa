@@ -95,6 +95,25 @@
     title.textContent = 'Buka di browser utama';
     subtitle.textContent = 'Kamu sedang di dalam aplikasi (Instagram/Facebook/dll). Ketuk tombol di bawah untuk pemesanan yang lancar.';
   }
+
+  // ---- Cegah masalah "harus ketuk berkali-kali" ----
+  // Beberapa webview Android suka "menelan" tap pertama pada link custom-scheme (intent://).
+  // Solusi: untuk Android di browser normal (BUKAN in-app browser), langsung coba redirect
+  // otomatis begitu halaman dibuka, tanpa perlu menunggu tap sama sekali.
+  // Tombol tetap ada sebagai fallback kalau auto-redirect diblokir browser.
+  if (isAndroid && !isInAppBrowser) {
+    setTimeout(function() {
+      window.location.href = chromeUrl;
+    }, 150);
+  }
+
+  // Pastikan tap pada tombol selalu langsung memicu navigasi (bukan cuma andalkan default <a> handling),
+  // dan beri feedback visual instan supaya tidak terasa "tidak merespons" saat ditekan.
+  primaryBtn.addEventListener('click', function(e) {
+    primaryBtn.style.opacity = '0.6';
+    primaryBtn.textContent = 'Membuka...';
+    window.location.href = chromeUrl;
+  });
 </script>
 
 </body>
