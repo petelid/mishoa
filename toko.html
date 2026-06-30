@@ -324,9 +324,56 @@ async function checkout(){
 
   let bonus = Math.floor(totalQty / 3)
 
-  // Pesanan dalam format teks rapi
+  // Susun teks WA awal (subtotal sementara, akan diganti pakai angka resmi dari server)
   let pesananText = cart.map(i => `${i.nama} x${i.qty}`).join(", ")
   if(bonus > 0) pesananText += `, Bonus: Ayam Bawang x${bonus}`
+
+  // Data untuk webhook
+  const webhookData = {
+    order_id:  orderId,
+    nama:      nama,
+    no_hp:     no_hp,
+    kota:      kota,
+    alamat:    alamat,
+    pesanan:   pesananText,
+    bonus:     bonus,
+    subtotal:  total,
+    ongkir:    0,
+    timestamp: new Date().toISOString()
+  }
+
+  // Kunci tombol checkout sambil menunggu konfirmasi server
+  const btn = document.querySelector('button[onclick="checkout()"]')
+  const btnOriginalText = btn ? btn.textContent : ''
+  if(btn){ btn.disabled = true; btn.textContent = 'Memproses...' }
+
+  let serverResult = null
+  try {
+    // PENTING: Content-Type text/plain (bukan application/json) supaya browser
+    // TIDAK kirim preflight OPTIONS request — Apps Script tidak bisa menjawab preflight,
+    // jadi kalau pakai application/json + mode normal, request akan gagal kena CORS.
+    // Dan TIDAK pakai mode:"no-cors" lagi, supaya respons server (kode unik, total resmi) bisa dibaca.
+    const res = await fetch("https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(webhookData)
+    })
+    serverResult = await res.json()
+  } catch(err) {
+    console.log("Webhook error:", err)
+  }
+
+  if(btn){ btn.disabled = false; btn.textContent = btnOriginalText }
+
+  if(!serverResult || serverResult.success === false) {
+    alert("Order gagal diproses: " + (serverResult && serverResult.error ? serverResult.error : "Tidak bisa terhubung ke server, coba lagi.") + "\n\nWhatsApp tidak akan dibuka, silakan coba checkout ulang.")
+    return
+  }
+
+  // Pakai angka RESMI dari server (subtotal divalidasi ulang, kode unik dibuat server) — bukan dari browser
+  const subtotalResmi = serverResult.subtotal
+  const kodeUnik       = serverResult.kode_unik
+  const totalSementara = serverResult.total // = subtotal + 0 (ongkir blm dikonfirmasi) + kode unik
 
   // Susun teks WA
   let text = `🛒 *ORDER MISHOA.ID*\n`
@@ -344,40 +391,17 @@ async function checkout(){
     text += `• Ayam Bawang x${bonus}\n`
   }
 
-  text += `\n💰 Subtotal: ${formatRupiah(total)}\n`
-  text += `🚚 Ongkir: (akan dikonfirmasi)\n\n`
+  text += `\n💰 Subtotal: ${formatRupiah(subtotalResmi)}\n`
+  text += `🚚 Ongkir: (akan dikonfirmasi)\n`
+  text += `🔢 Kode Unik: +${kodeUnik}\n`
+  text += `💳 *Estimasi Transfer: ${formatRupiah(totalSementara)} + ongkir*\n`
+  text += `_(Mohon transfer PAS sesuai kode unik di atas setelah ongkir dikonfirmasi, agar mudah dicocokkan)_\n\n`
   text += `👤 ${nama}\n`
   if(no_hp) text += `📱 ${no_hp}\n`
   text += `🏙️ ${kota}\n`
   text += `📍 ${alamat}`
 
-  // Data untuk webhook
-  const webhookData = {
-    order_id:  orderId,
-    nama:      nama,
-    no_hp:     no_hp,
-    kota:      kota,
-    alamat:    alamat,
-    pesanan:   pesananText,
-    bonus:     bonus,
-    subtotal:  total,
-    ongkir:    0,
-    timestamp: new Date().toISOString()
-  }
-
-  // Kirim ke webhook DULU, tunggu selesai, baru buka WA
-  try {
-    await fetch("https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(webhookData),
-      mode: "no-cors"
-    })
-  } catch(err) {
-    console.log("Webhook error:", err)
-  }
-
-  // Buka WA setelah webhook selesai
+  // Buka WA setelah order tersimpan & tervalidasi di server
   window.open("https://api.whatsapp.com/send?phone=6282112007575&text=" + encodeURIComponent(text), "_blank")
 }
 
