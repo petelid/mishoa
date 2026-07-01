@@ -4,12 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mishoa.id 🍜</title>
-
-<!-- Lapis 1: redirect otomatis via meta refresh.
-     Ini jalan di HAMPIR SEMUA browser bahkan sebelum JS sempat dieksekusi,
-     dan tidak bergantung sama sekali pada skema custom (intent://, dll) -->
-<meta http-equiv="refresh" content="0; url=https://petelid.github.io/mishoa/toko.html">
-
 <style>
   * { box-sizing: border-box; margin:0; padding:0; }
   body {
@@ -53,7 +47,7 @@
 
 <div class="logo">🍜</div>
 <h2 id="title">Membuka Mishoa.id...</h2>
-<p id="subtitle">Kalau tidak otomatis terbuka, ketuk tombol di bawah</p>
+<p id="subtitle">Ketuk tombol di bawah kalau tidak otomatis terbuka</p>
 
 <a class="btn" id="primaryBtn" href="https://petelid.github.io/mishoa/toko.html">
   👉 Buka Mishoa.id
@@ -65,34 +59,92 @@
 </p>
 
 <script>
-  // TARGET_URL: satu-satunya sumber kebenaran, dipakai untuk redirect JS,
-  // dan sudah sama persis dengan href tombol + meta refresh di atas.
-  var TARGET_URL = "https://petelid.github.io/mishoa/toko.html";
+  var TARGET_URL   = "https://petelid.github.io/mishoa/toko.html";
+  var TARGET_HOST  = TARGET_URL.replace(/^https?:\/\//, "");
 
   var ua = navigator.userAgent || navigator.vendor || window.opera || "";
-  var isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok/i.test(ua);
+  var isAndroid       = /android/i.test(ua);
+  var isIOS           = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var isInAppBrowser  = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok/i.test(ua);
 
-  if (isInAppBrowser) {
-    // Di dalam in-app browser (webview Instagram/FB/TikTok/dll), kita TIDAK
-    // auto-redirect. https:// link tetap akan dibuka di webview yang sama,
-    // jadi lebih membantu kalau user diarahkan untuk pakai menu "buka di
-    // browser" bawaan aplikasi tersebut, daripada dipaksa redirect berulang.
-    document.getElementById('title').textContent = 'Buka di browser utama';
-    document.getElementById('subtitle').textContent =
-      'Untuk pemesanan yang lancar, buka halaman ini di browser HP-mu (bukan di dalam aplikasi).';
-    document.getElementById('inAppHint').style.display = 'block';
-  } else {
-    // Browser normal apa pun (Chrome, Safari, Samsung Internet, Firefox, dst):
-    // langsung redirect pakai window.location, cara paling universal,
-    // tidak bergantung skema custom apa pun.
-    window.location.replace(TARGET_URL);
+  var primaryBtn = document.getElementById('primaryBtn');
+  var title      = document.getElementById('title');
+  var subtitle   = document.getElementById('subtitle');
+
+  // URL untuk MAKSA buka di Chrome (Android: intent scheme, iOS: googlechrome scheme).
+  // Ini yang dulu bikin flow checkout WA lancar, karena WA App Link paling
+  // konsisten diproses kalau dibuka lewat Chrome.
+  var chromeForceUrl = null;
+  if (isAndroid) {
+    chromeForceUrl = "intent://" + TARGET_HOST +
+      "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
+      encodeURIComponent(TARGET_URL) + ";end";
+  } else if (isIOS) {
+    chromeForceUrl = "googlechromes://" + TARGET_HOST;
   }
 
-  // Tombol tetap selalu berfungsi sebagai fallback terakhir,
-  // baik auto-redirect gagal maupun user memang berada di in-app browser.
-  document.getElementById('primaryBtn').addEventListener('click', function() {
-    window.location.href = TARGET_URL;
+  // Tombol selalu siap dipencet kapan saja: manual tap = coba Chrome dulu
+  // (kalau ada), fallback plain https langsung dipasang di href sebagai
+  // jaring pengaman paling dasar (browser lama yang bahkan JS-nya bermasalah
+  // pun tombolnya tetap jalan karena href sudah TARGET_URL).
+  primaryBtn.addEventListener('click', function(e) {
+    primaryBtn.style.opacity = '0.6';
+    primaryBtn.textContent = 'Membuka...';
+    if (chromeForceUrl) {
+      e.preventDefault();
+      window.location.href = chromeForceUrl;
+      // fail-safe manual: kalau setelah tap Chrome tetap gak kebuka,
+      // lempar ke TARGET_URL biasa supaya tap sekali ini tetap berujung
+      // ke toko, bukan diam di tempat.
+      setTimeout(function() {
+        if (!document.hidden) window.location.href = TARGET_URL;
+      }, 1200);
+    }
   });
+
+  if (isInAppBrowser) {
+    // Di dalam in-app browser (webview IG/FB/TikTok), intent/googlechrome
+    // scheme biasanya diblokir webview. Jangan auto-redirect berulang,
+    // cukup arahkan user pakai menu "Buka di Browser" bawaan aplikasi.
+    title.textContent = 'Buka di browser utama';
+    subtitle.textContent = 'Untuk pemesanan yang lancar, buka halaman ini di browser HP-mu (bukan di dalam aplikasi).';
+    document.getElementById('inAppHint').style.display = 'block';
+  } else if (chromeForceUrl) {
+    // Android / iOS di browser normal: langsung coba paksa Chrome
+    // OTOMATIS begitu halaman kebuka, tanpa perlu tap sama sekali.
+    title.textContent = 'Membuka di Chrome...';
+
+    var attemptedAt = Date.now();
+    var fallbackFired = false;
+
+    function fallbackToPlain() {
+      if (fallbackFired) return;
+      fallbackFired = true;
+      window.location.href = TARGET_URL;
+    }
+
+    // Kalau Chrome BERHASIL kebuka, tab/halaman ini akan disembunyikan
+    // (browser pindah ke app lain) -> event ini kedeteksi -> batalkan fallback.
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) fallbackFired = true; // berhasil, jangan fallback lagi
+    });
+
+    // Fail-safe: kalau 1.2 detik berlalu dan halaman MASIH terlihat,
+    // artinya percobaan buka Chrome gagal diam-diam (browser gak kenal
+    // skema intent://googlechrome://). Langsung redirect ke URL biasa,
+    // supaya user tetap sampai ke toko tanpa perlu tap apapun lagi.
+    setTimeout(function() {
+      if (!document.hidden && Date.now() - attemptedAt >= 1100) {
+        fallbackToPlain();
+      }
+    }, 1200);
+
+    // Trigger percobaan buka Chrome sekarang.
+    window.location.href = chromeForceUrl;
+  } else {
+    // Desktop atau platform lain: langsung redirect biasa.
+    window.location.replace(TARGET_URL);
+  }
 </script>
 
 </body>
