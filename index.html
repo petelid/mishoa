@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mishoa.id 🍜</title>
+
+<!-- Lapis 1: redirect otomatis via meta refresh.
+     Ini jalan di HAMPIR SEMUA browser bahkan sebelum JS sempat dieksekusi,
+     dan tidak bergantung sama sekali pada skema custom (intent://, dll) -->
+<meta http-equiv="refresh" content="0; url=https://petelid.github.io/mishoa/toko.html">
+
 <style>
   * { box-sizing: border-box; margin:0; padding:0; }
   body {
@@ -34,85 +40,58 @@
     font-weight: 600;
     font-size: 15px;
   }
-  a.btn.secondary {
-    background: transparent;
-    border: 1px solid #333;
-    color: #ccc;
+  .hint {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #666;
+    max-width: 300px;
+    line-height: 1.5;
   }
-  .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid #333;
-    border-top-color: #E8590C;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-bottom: 20px;
-    display: none;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
 <div class="logo">🍜</div>
-<div class="spinner" id="spinner"></div>
 <h2 id="title">Membuka Mishoa.id...</h2>
-<p id="subtitle">Ketuk tombol di bawah untuk lanjut pemesanan</p>
+<p id="subtitle">Kalau tidak otomatis terbuka, ketuk tombol di bawah</p>
 
-<a class="btn" id="primaryBtn" href="#">👉 Buka di Browser</a>
+<a class="btn" id="primaryBtn" href="https://petelid.github.io/mishoa/toko.html">
+  👉 Buka Mishoa.id
+</a>
+
+<p class="hint" id="inAppHint" style="display:none;">
+  Kamu sedang membuka ini dari dalam aplikasi (Instagram/Facebook/TikTok/dll).
+  Ketuk ⋮ atau ••• di pojok atas, lalu pilih "Buka di Browser" untuk pengalaman belanja yang lebih lancar.
+</p>
 
 <script>
-  const TARGET_URL = "https://petelid.github.io/mishoa/toko.html";
-  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  // TARGET_URL: satu-satunya sumber kebenaran, dipakai untuk redirect JS,
+  // dan sudah sama persis dengan href tombol + meta refresh di atas.
+  var TARGET_URL = "https://petelid.github.io/mishoa/toko.html";
 
-  const isAndroid = /android/i.test(ua);
-  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-  const isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok/i.test(ua);
-
-  const primaryBtn = document.getElementById('primaryBtn');
-  const title = document.getElementById('title');
-  const subtitle = document.getElementById('subtitle');
-
-  let chromeUrl = TARGET_URL;
-
-  if (isAndroid) {
-    chromeUrl = `intent://${TARGET_URL.replace('https://','')}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(TARGET_URL)};end`;
-    title.textContent = 'Membuka di Chrome...';
-    primaryBtn.textContent = '👉 Buka di Chrome';
-  } else if (isIOS) {
-    chromeUrl = TARGET_URL;
-    title.textContent = 'Membuka di Safari...';
-    subtitle.textContent = 'Ketuk tombol di bawah untuk lanjut pemesanan';
-    primaryBtn.textContent = '👉 Buka di Safari';
-  } else {
-    // Desktop - langsung redirect, tidak perlu tombol
-    window.location.href = TARGET_URL;
-  }
-
-  // href diset langsung supaya tombol selalu bisa diklik kapan saja, tanpa logika tambahan
-  primaryBtn.setAttribute('href', chromeUrl);
+  var ua = navigator.userAgent || navigator.vendor || window.opera || "";
+  var isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok/i.test(ua);
 
   if (isInAppBrowser) {
-    title.textContent = 'Buka di browser utama';
-    subtitle.textContent = 'Kamu sedang di dalam aplikasi (Instagram/Facebook/dll). Ketuk tombol di bawah untuk pemesanan yang lancar.';
+    // Di dalam in-app browser (webview Instagram/FB/TikTok/dll), kita TIDAK
+    // auto-redirect. https:// link tetap akan dibuka di webview yang sama,
+    // jadi lebih membantu kalau user diarahkan untuk pakai menu "buka di
+    // browser" bawaan aplikasi tersebut, daripada dipaksa redirect berulang.
+    document.getElementById('title').textContent = 'Buka di browser utama';
+    document.getElementById('subtitle').textContent =
+      'Untuk pemesanan yang lancar, buka halaman ini di browser HP-mu (bukan di dalam aplikasi).';
+    document.getElementById('inAppHint').style.display = 'block';
+  } else {
+    // Browser normal apa pun (Chrome, Safari, Samsung Internet, Firefox, dst):
+    // langsung redirect pakai window.location, cara paling universal,
+    // tidak bergantung skema custom apa pun.
+    window.location.replace(TARGET_URL);
   }
 
-  // ---- Cegah masalah "harus ketuk berkali-kali" ----
-  // Beberapa webview Android suka "menelan" tap pertama pada link custom-scheme (intent://).
-  // Solusi: untuk Android di browser normal (BUKAN in-app browser), langsung coba redirect
-  // otomatis begitu halaman dibuka, tanpa perlu menunggu tap sama sekali.
-  // Tombol tetap ada sebagai fallback kalau auto-redirect diblokir browser.
-  if (isAndroid && !isInAppBrowser) {
-    setTimeout(function() {
-      window.location.href = chromeUrl;
-    }, 150);
-  }
-
-  // Pastikan tap pada tombol selalu langsung memicu navigasi (bukan cuma andalkan default <a> handling),
-  // dan beri feedback visual instan supaya tidak terasa "tidak merespons" saat ditekan.
-  primaryBtn.addEventListener('click', function(e) {
-    primaryBtn.style.opacity = '0.6';
-    primaryBtn.textContent = 'Membuka...';
-    window.location.href = chromeUrl;
+  // Tombol tetap selalu berfungsi sebagai fallback terakhir,
+  // baik auto-redirect gagal maupun user memang berada di in-app browser.
+  document.getElementById('primaryBtn').addEventListener('click', function() {
+    window.location.href = TARGET_URL;
   });
 </script>
 
