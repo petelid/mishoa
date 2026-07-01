@@ -34,117 +34,31 @@
     font-weight: 600;
     font-size: 15px;
   }
-  .hint {
-    margin-top: 20px;
-    font-size: 12px;
-    color: #666;
-    max-width: 300px;
-    line-height: 1.5;
-  }
 </style>
 </head>
 <body>
 
 <div class="logo">🍜</div>
-<h2 id="title">Membuka Mishoa.id...</h2>
-<p id="subtitle">Ketuk tombol di bawah kalau tidak otomatis terbuka</p>
+<h2>Membuka di Chrome...</h2>
+<p>Ketuk tombol di bawah kalau belum otomatis terbuka</p>
 
-<a class="btn" id="primaryBtn" href="https://petelid.github.io/mishoa/toko.html">
-  👉 Buka Mishoa.id
-</a>
-
-<p class="hint" id="inAppHint" style="display:none;">
-  Kamu sedang membuka ini dari dalam aplikasi (Instagram/Facebook/TikTok/dll).
-  Ketuk ⋮ atau ••• di pojok atas, lalu pilih "Buka di Browser" untuk pengalaman belanja yang lebih lancar.
-</p>
+<a class="btn" id="primaryBtn" href="#">👉 Buka di Chrome</a>
 
 <script>
-  var TARGET_URL   = "https://petelid.github.io/mishoa/toko.html";
-  var TARGET_HOST  = TARGET_URL.replace(/^https?:\/\//, "");
-
+  var TARGET_URL  = "https://petelid.github.io/mishoa/toko.html";
+  var TARGET_HOST = TARGET_URL.replace(/^https?:\/\//, "");
   var ua = navigator.userAgent || navigator.vendor || window.opera || "";
-  var isAndroid       = /android/i.test(ua);
-  var isIOS           = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-  var isInAppBrowser  = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok/i.test(ua);
+  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
 
-  var primaryBtn = document.getElementById('primaryBtn');
-  var title      = document.getElementById('title');
-  var subtitle   = document.getElementById('subtitle');
+  // Selalu paksa ke Chrome, tanpa kecuali, tanpa fallback ke browser lain.
+  var chromeUrl = isIOS
+    ? "googlechromes://" + TARGET_HOST
+    : "intent://" + TARGET_HOST + "#Intent;scheme=https;package=com.android.chrome;end";
 
-  // URL untuk MAKSA buka di Chrome (Android: intent scheme, iOS: googlechrome scheme).
-  // Ini yang dulu bikin flow checkout WA lancar, karena WA App Link paling
-  // konsisten diproses kalau dibuka lewat Chrome.
-  var chromeForceUrl = null;
-  if (isAndroid) {
-    chromeForceUrl = "intent://" + TARGET_HOST +
-      "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
-      encodeURIComponent(TARGET_URL) + ";end";
-  } else if (isIOS) {
-    chromeForceUrl = "googlechromes://" + TARGET_HOST;
-  }
+  document.getElementById('primaryBtn').setAttribute('href', chromeUrl);
 
-  // Tombol selalu siap dipencet kapan saja: manual tap = coba Chrome dulu
-  // (kalau ada), fallback plain https langsung dipasang di href sebagai
-  // jaring pengaman paling dasar (browser lama yang bahkan JS-nya bermasalah
-  // pun tombolnya tetap jalan karena href sudah TARGET_URL).
-  primaryBtn.addEventListener('click', function(e) {
-    primaryBtn.style.opacity = '0.6';
-    primaryBtn.textContent = 'Membuka...';
-    if (chromeForceUrl) {
-      e.preventDefault();
-      window.location.href = chromeForceUrl;
-      // fail-safe manual: kalau setelah tap Chrome tetap gak kebuka,
-      // lempar ke TARGET_URL biasa supaya tap sekali ini tetap berujung
-      // ke toko, bukan diam di tempat.
-      setTimeout(function() {
-        if (!document.hidden) window.location.href = TARGET_URL;
-      }, 1200);
-    }
-  });
-
-  if (isInAppBrowser) {
-    // Di dalam in-app browser (webview IG/FB/TikTok), intent/googlechrome
-    // scheme biasanya diblokir webview. Jangan auto-redirect berulang,
-    // cukup arahkan user pakai menu "Buka di Browser" bawaan aplikasi.
-    title.textContent = 'Buka di browser utama';
-    subtitle.textContent = 'Untuk pemesanan yang lancar, buka halaman ini di browser HP-mu (bukan di dalam aplikasi).';
-    document.getElementById('inAppHint').style.display = 'block';
-  } else if (chromeForceUrl) {
-    // Android / iOS di browser normal: langsung coba paksa Chrome
-    // OTOMATIS begitu halaman kebuka, tanpa perlu tap sama sekali.
-    title.textContent = 'Membuka di Chrome...';
-
-    var attemptedAt = Date.now();
-    var fallbackFired = false;
-
-    function fallbackToPlain() {
-      if (fallbackFired) return;
-      fallbackFired = true;
-      window.location.href = TARGET_URL;
-    }
-
-    // Kalau Chrome BERHASIL kebuka, tab/halaman ini akan disembunyikan
-    // (browser pindah ke app lain) -> event ini kedeteksi -> batalkan fallback.
-    document.addEventListener('visibilitychange', function() {
-      if (document.hidden) fallbackFired = true; // berhasil, jangan fallback lagi
-    });
-
-    // Fail-safe: kalau 1.2 detik berlalu dan halaman MASIH terlihat,
-    // artinya percobaan buka Chrome gagal diam-diam (browser gak kenal
-    // skema intent://googlechrome://). Langsung redirect ke URL biasa,
-    // supaya user tetap sampai ke toko tanpa perlu tap apapun lagi.
-    setTimeout(function() {
-      if (!document.hidden && Date.now() - attemptedAt >= 1100) {
-        fallbackToPlain();
-      }
-    }, 1200);
-
-    // Trigger percobaan buka Chrome sekarang.
-    window.location.href = chromeForceUrl;
-  } else {
-    // Desktop atau platform lain: langsung redirect biasa.
-    window.location.replace(TARGET_URL);
-  }
+  // Trigger otomatis begitu halaman dibuka, tanpa perlu tap.
+  window.location.href = chromeUrl;
 </script>
 
 </body>
