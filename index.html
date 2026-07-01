@@ -43,6 +43,7 @@
 <p>Ketuk tombol di bawah kalau belum otomatis terbuka</p>
 
 <a class="btn" id="primaryBtn" href="#">👉 Buka di Chrome</a>
+<p id="tapHint" style="margin-top:14px;font-size:12px;color:#666;"></p>
 
 <script>
   var TARGET_URL  = "https://petelid.github.io/mishoa/toko.html";
@@ -56,6 +57,10 @@
     : "intent://" + TARGET_HOST + "#Intent;scheme=https;package=com.android.chrome;end";
 
   document.getElementById('primaryBtn').setAttribute('href', chromeUrl);
+
+  if (!isIOS) {
+    document.getElementById('tapHint').textContent = 'Ketuk "Buka" / "Selalu" hingga 2-3x jika HP memunculkan pilihan aplikasi';
+  }
 
   // Trigger otomatis begitu halaman dibuka, tanpa perlu tap.
   window.location.href = chromeUrl;
