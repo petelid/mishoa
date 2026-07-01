@@ -365,24 +365,43 @@ async function checkout(){
     timestamp: new Date().toISOString()
   }
 
-  // Kirim ke webhook DULU, tunggu selesai, baru buka WA
+  // PENTING: webhook dikirim TANPA ditunggu (fire-and-forget), lalu LANGSUNG
+  // navigasi ke WA di baris berikutnya, tanpa jeda apapun di antaranya.
+  //
+  // Kenapa: kalau pakai `await fetch(...)` sebelum window.location.href,
+  // jeda tunggu itu (walau cuma sepersekian detik) membuat banyak browser
+  // bawaan HP (terutama non-Chrome) menganggap navigasi ke WA BUKAN lagi
+  // bagian langsung dari klik tombol user. Begitu dianggap bukan aksi user
+  // langsung, browser MENOLAK buka app WhatsApp meski sudah terinstall,
+  // dan malah munculin saran "unduh aplikasi". Makanya webhook dan buka WA
+  // harus dieksekusi beruntun tanpa nunggu satu sama lain.
+  //
+  // navigator.sendBeacon dirancang khusus untuk kasus "kirim data lalu
+  // langsung pindah halaman" - datanya dijamin tetap terkirim di background
+  // walau halaman langsung ditinggalkan.
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(webhookData),
-      mode: "no-cors"
-    })
+    if (navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(webhookData)], { type: 'text/plain;charset=UTF-8' })
+      navigator.sendBeacon(
+        "https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec",
+        blob
+      )
+    } else {
+      // Fallback kalau sendBeacon tidak didukung: fetch tanpa di-await + keepalive
+      // supaya request tetap jalan walau halaman langsung pindah.
+      fetch("https://script.google.com/macros/s/AKfycbw8qDBpjxY7zDntR_WIl5ToW0FknraClYaYn2xIabBQFD2oPAdwHHS3ZjLewUddjIWs/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(webhookData),
+        mode: "no-cors",
+        keepalive: true
+      })
+    }
   } catch(err) {
     console.log("Webhook error:", err)
   }
 
-  // Buka WA setelah webhook selesai.
-  // Pakai wa.me (bukan api.whatsapp.com) + window.location.href (bukan window.open):
-  // window.open kadang buka tab kosong dulu sebelum pindah, dan perpindahan itu
-  // tidak selalu dianggap "aksi langsung dari user" oleh browser mobile, jadi
-  // deep link WA-nya gagal ke-trigger dan malah muncul saran unduh aplikasi.
-  // window.location.href langsung dianggap navigasi dari klik user -> app WA kebuka.
+  // Navigasi ke WA langsung, TANPA await/jeda apapun sebelumnya.
   window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
 }
 
