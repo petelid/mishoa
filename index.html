@@ -42,28 +42,36 @@
 <h2>Membuka di Chrome...</h2>
 <p>Ketuk tombol di bawah kalau belum otomatis terbuka</p>
 
-<a class="btn" id="primaryBtn" href="#">👉 Buka di Chrome</a>
+<a class="btn" id="primaryBtn" href="https://petelid.github.io/mishoa/toko.html">👉 Buka di Chrome</a>
 <p id="tapHint" style="margin-top:14px;font-size:12px;color:#666;"></p>
 
 <script>
   var TARGET_URL  = "https://petelid.github.io/mishoa/toko.html";
   var TARGET_HOST = TARGET_URL.replace(/^https?:\/\//, "");
-  var ua = navigator.userAgent || navigator.vendor || window.opera || "";
-  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var ua        = navigator.userAgent || navigator.vendor || window.opera || "";
+  var isIOS     = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var isAndroid = /android/i.test(ua);
 
-  // Selalu paksa ke Chrome, tanpa kecuali, tanpa fallback ke browser lain.
-  var chromeUrl = isIOS
-    ? "googlechromes://" + TARGET_HOST
-    : "intent://" + TARGET_HOST + "#Intent;scheme=https;package=com.android.chrome;end";
+  if (!isAndroid && !isIOS) {
+    // Desktop (atau platform lain di luar Android/iOS): intent:// dan
+    // googlechromes:// itu skema khusus mobile, di desktop gak berarti
+    // apa-apa. Langsung redirect biasa, browser apa pun pasti ngerti.
+    window.location.replace(TARGET_URL);
+  } else {
+    // Selalu paksa ke Chrome, tanpa kecuali, tanpa fallback ke browser lain.
+    var chromeUrl = isIOS
+      ? "googlechromes://" + TARGET_HOST
+      : "intent://" + TARGET_HOST + "#Intent;scheme=https;package=com.android.chrome;end";
 
-  document.getElementById('primaryBtn').setAttribute('href', chromeUrl);
+    document.getElementById('primaryBtn').setAttribute('href', chromeUrl);
 
-  if (!isIOS) {
-    document.getElementById('tapHint').textContent = 'Ketuk "Buka" / "Selalu" hingga 2-3x jika HP memunculkan pilihan aplikasi';
+    if (!isIOS) {
+      document.getElementById('tapHint').textContent = 'Ketuk "Buka" / "Selalu" hingga 2-3x jika HP memunculkan pilihan aplikasi';
+    }
+
+    // Trigger otomatis begitu halaman dibuka, tanpa perlu tap.
+    window.location.href = chromeUrl;
   }
-
-  // Trigger otomatis begitu halaman dibuka, tanpa perlu tap.
-  window.location.href = chromeUrl;
 </script>
 
 </body>
