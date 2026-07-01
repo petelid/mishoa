@@ -377,8 +377,13 @@ async function checkout(){
     console.log("Webhook error:", err)
   }
 
-  // Buka WA setelah webhook selesai
-  window.open("https://api.whatsapp.com/send?phone=6282112007575&text=" + encodeURIComponent(text), "_blank")
+  // Buka WA setelah webhook selesai.
+  // Pakai wa.me (bukan api.whatsapp.com) + window.location.href (bukan window.open):
+  // window.open kadang buka tab kosong dulu sebelum pindah, dan perpindahan itu
+  // tidak selalu dianggap "aksi langsung dari user" oleh browser mobile, jadi
+  // deep link WA-nya gagal ke-trigger dan malah muncul saran unduh aplikasi.
+  // window.location.href langsung dianggap navigasi dari klik user -> app WA kebuka.
+  window.location.href = "https://wa.me/6282112007575?text=" + encodeURIComponent(text)
 }
 
 function scrollToCart(){
