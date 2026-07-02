@@ -34,8 +34,11 @@ img {
 
 <div class="sticky top-0 z-50 bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center backdrop-blur-sm">
   <h1 class="font-bold text-lg">🍜 Mishoa.id</h1>
-  <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold hover:scale-105 transition">
-    🛒 <span id="cartCount">0</span>
+  <div class="flex items-center gap-3">
+    <a href="cerita.html" class="text-xs text-gray-300 hover:text-orange-400 transition underline decoration-dotted">📜 Kisah Kami</a>
+    <div onclick="scrollToCart()" class="cursor-pointer bg-orange-500 px-4 py-2 rounded-xl font-semibold hover:scale-105 transition">
+      🛒 <span id="cartCount">0</span>
+    </div>
   </div>
 </div>
 
@@ -52,6 +55,19 @@ img {
     Pesan Sekarang
   </button>
 </section>
+
+<!-- CARA PENYAJIAN (collapsible) -->
+<div class="max-w-xl mx-auto px-4 sm:px-6 mb-10">
+  <details class="bg-white/10 border border-white/10 rounded-2xl overflow-hidden">
+    <summary class="cursor-pointer px-5 py-3 font-semibold flex items-center justify-between select-none">
+      <span>📖 Cara Penyajian Mishoa Instan</span>
+      <span class="text-xs text-gray-400">Ketuk untuk lihat</span>
+    </summary>
+    <div class="px-5 pb-5">
+      <img src="cara-penyajian.jpg" alt="Cara penyajian Mishoa Instan: rebus air, masukkan bumbu, rebus mie 10 detik, aduk dan sajikan" class="w-full rounded-xl">
+    </div>
+  </details>
+</div>
 
 <!-- PRODUK -->
 
