@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kisah Mishoa 🍜 | 米索的故事</title>
+<meta name="description" content="Sejarah mie panjang umur dalam budaya Tionghoa dan bagaimana Mishoa membawa warisan itu ke meja makan sehari-hari.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif:wght@400;600&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:      #efe2c2;
+    --paper-2:    #e6d3a8;
+    --paper-edge: #d9c491;
+    --ink:        #2b1b12;
+    --ink-soft:   #5a4634;
+    --red:        #9c2a2a;
+    --red-deep:   #7a1f1f;
+    --gold:       #a9821c;
+    --gold-light: #c9a54a;
+    --wood-1:     #3b2418;
+    --wood-2:     #221309;
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+
+  html { scroll-behavior:smooth; }
+
+  body{
+    background:var(--wood-2);
+    font-family:'Noto Serif', serif;
+    color:var(--ink);
+  }
+
+  /* ---------- SCROLL ROLLER (top & bottom) ---------- */
+  .roller{
+    position:relative;
+    height:34px;
+    background:
+      linear-gradient(180deg, #5a3a24 0%, var(--wood-1) 35%, var(--wood-1) 65%, #1a0f07 100%);
+    box-shadow: inset 0 3px 6px rgba(255,255,255,0.08), inset 0 -6px 10px rgba(0,0,0,0.5);
+  }
+  .roller::before, .roller::after{
+    content:"";
+    position:absolute;
+    top:50%; transform:translateY(-50%);
+    width:26px; height:54px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 55%, #5c4416 100%);
+    box-shadow: 0 0 0 3px #1a0f07 inset, 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .roller::before{ left:8px; }
+  .roller::after{ right:8px; }
+
+  /* ---------- PARCHMENT BODY ---------- */
+  .parchment{
+    max-width:760px;
+    margin:0 auto;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.10), transparent 40%),
+      radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.05), transparent 45%),
+      linear-gradient(90deg, var(--paper-edge) 0%, var(--paper) 3%, var(--paper) 97%, var(--paper-edge) 100%);
+    box-shadow: 0 0 40px rgba(0,0,0,0.55);
+    padding: 0 6vw 10px;
+  }
+
+  .chapter{
+    padding: 56px 0 40px;
+    opacity:0;
+    transform: translateY(18px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .chapter.visible{ opacity:1; transform:translateY(0); }
+
+  .divider{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin: 4px 0 8px;
+    color: var(--gold);
+  }
+  .divider .line{ flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .divider svg{ width:22px; height:22px; opacity:0.85; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    text-align:center;
+    padding: 54px 0 20px;
+  }
+  .hero .seal{
+    width:64px; height:64px;
+    margin: 0 auto 18px;
+    border-radius:8px;
+    background: var(--red-deep);
+    color:#f2e3c6;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Ma Shan Zheng', cursive;
+    font-size:34px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(242,227,198,0.25);
+    transform: rotate(-4deg);
+  }
+  .hero .zh-title{
+    font-family:'Ma Shan Zheng', cursive;
+    font-size: clamp(40px, 9vw, 64px);
+    color: var(--red);
+    line-height:1;
+    letter-spacing:2px;
+    margin-bottom:6px;
+  }
+  .hero .id-title{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-style:italic;
+    font-size: clamp(20px, 4vw, 26px);
+    color: var(--ink-soft);
+    letter-spacing:0.5px;
+  }
+  .hero .hook{
+    max-width:480px;
+    margin: 26px auto 0;
+    font-family:'Cormorant Garamond', serif;
+    font-size:20px;
+    font-style:italic;
+    color:var(--ink);
+    line-height:1.6;
+  }
+
+  /* ---------- CHAPTER TITLES ---------- */
+  .chapter h2{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-size: clamp(24px, 5vw, 32px);
+    color: var(--red);
+    position:relative;
+    display:inline-block;
+    margin-bottom:2px;
+  }
+  .chapter .zh-sub{
+    font-family:'Noto Serif SC', serif;
+    font-size:15px;
+    color:var(--gold);
+    letter-spacing:3px;
+    margin-bottom:18px;
+    text-transform:uppercase;
+  }
+
+  .chapter p.id{
+    font-family:'Noto Serif', serif;
+    font-size:16.5px;
+    line-height:1.85;
+    color: var(--ink);
+    margin-bottom:10px;
+  }
+  .chapter p.zh{
+    font-family:'Noto Serif SC', serif;
+    font-size:14px;
+    line-height:1.9;
+    color: var(--ink-soft);
+    margin-bottom:26px;
+    padding-left:14px;
+    border-left: 2px solid var(--paper-edge);
+  }
+
+  /* ---------- ILLUSTRATIONS ---------- */
+  .illus{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    margin: 22px 0 28px;
+  }
+  .illus svg{ width:100%; max-width:320px; height:auto; }
+
+  /* ---------- PULL QUOTE ---------- */
+  .pull{
+    text-align:center;
+    margin: 30px 0;
+    padding: 18px 10px;
+  }
+  .pull .zh{
+    font-family:'Ma Shan Zheng', cursive;
+    font-size: clamp(26px, 6vw, 34px);
+    color: var(--red);
+    display:block;
+  }
+  .pull .id{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:16px;
+    color: var(--ink-soft);
+    display:block;
+    margin-top:6px;
+  }
+
+  /* ---------- IMAGE PLACEHOLDER (foto asli Mishoa bisa ditaruh di sini) ---------- */
+  .photo-slot{
+    width:100%;
+    aspect-ratio: 16/9;
+    border-radius:6px;
+    margin: 24px 0;
+    overflow:hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25), 0 0 0 6px var(--paper), 0 0 0 7px var(--paper-edge);
+  }
+  .photo-slot img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* ---------- CTA ---------- */
+  .cta{
+    text-align:center;
+    padding: 20px 0 46px;
+  }
+  .cta a.btn{
+    display:inline-block;
+    padding: 15px 34px;
+    background: var(--red);
+    color:#f4e9cf;
+    text-decoration:none;
+    border-radius:4px;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-size:18px;
+    letter-spacing:0.5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  }
+  .cta .zh-cta{
+    display:block;
+    font-family:'Noto Serif SC', serif;
+    font-size:12px;
+    color: var(--ink-soft);
+    margin-top:10px;
+    letter-spacing:2px;
+  }
+
+  @media (max-width:480px){
+    .parchment{ padding:0 5vw 6px; }
+    .chapter{ padding:42px 0 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="roller" role="presentation"></div>
+
+<main class="parchment">
+
+  <!-- ===== HERO ===== -->
+  <section class="hero chapter visible">
+    <div class="seal">米</div>
+    <div class="zh-title">米索的故事</div>
+    <div class="id-title">Kisah di Balik Mishoa</div>
+    <p class="hook">
+      Setiap kali sumpit mengangkat seuntai mie tanpa memutusnya,
+      ada satu harapan tua yang diam-diam terucap: umur panjang, dan hidup yang terus mengalir.
+    </p>
+  </section>
+
+  <!-- ===== BAB 1: ASAL MULA ===== -->
+  <section class="chapter" id="asal-mula">
+    <div class="divider">
+      <span class="line"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12c3-4 5 4 8 0s5 4 8 0s4-4 4-4"/></svg>
+      <span class="line"></span>
+    </div>
+
+    <h2>Asal Mula</h2>
+    <div class="zh-sub">起源</div>
+
+    <p class="id">
+      Mie sudah hadir di meja makan Tiongkok sejak lebih dari empat ribu tahun lalu — jauh sebelum
+      pasta dikenal di Eropa. Ia lahir sederhana: tepung gandum yang diulen dan ditarik tangan,
+      makanan rakyat yang lambat laun naik derajat menjadi hidangan penuh makna.
+    </p>
+    <p class="zh">
+      面条在中国的历史已超过四千年。它起源于用手工揉制、拉长的小麦面团，
+      从平凡的日常食物，逐渐演变成充满寓意的传统佳肴。
+    </p>
+
+    <div class="illus">
+      <svg viewBox="0 0 200 120" fill="none">
+        <path d="M20 100 Q40 20 60 100 Q80 20 100 100 Q120 20 140 100 Q160 20 180 100" stroke="#9c2a2a" stroke-width="2.5" stroke-linecap="round" opacity="0.75"/>
+        <ellipse cx="100" cy="104" rx="86" ry="10" fill="none" stroke="#a9821c" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <p class="id">
+      Sejak masa Dinasti Han, mie mulai dikaitkan dengan perayaan ulang tahun dan festival-festival
+      besar. Bentuknya yang memanjang membawanya melintasi Jalur Sutra ke seluruh Asia — bahkan
+      konon turut memengaruhi lahirnya pasta di Italia. Di Indonesia sendiri, mie dibawa oleh
+      para pedagang Tionghoa sekitar abad ke-19, lalu berbaur dengan bumbu dan selera lokal hingga
+      menjadi bagian dari identitas kuliner Nusantara.
+    </p>
+    <p class="zh">
+      早在汉代，面条便与生日和重要节庆产生了联系。它那修长的形态沿着丝绸之路传遍亚洲，
+      甚至被认为影响了意大利面的诞生。而在印尼，面条由十九世纪的华人商贩带入，
+      与当地香料及口味融合，成为群岛饮食文化的一部分。
+    </p>
+  </section>
+
+  <!-- ===== BAB 2: MAKNA ===== -->
+  <section class="chapter" id="makna">
+    <div class="divider">
+      <span class="line"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12c3-4 5 4 8 0s5 4 8 0s4-4 4-4"/></svg>
+      <span class="line"></span>
+    </div>
+
+    <h2>Makna Mie Panjang Umur</h2>
+    <div class="zh-sub">长寿面的寓意</div>
+
+    <p class="id">
+      Dalam budaya Tionghoa, mie ini dikenal sebagai <em>Chang Shou Mian</em> (长寿面) —
+      secara harfiah berarti "mie umur panjang". Panjangnya untaian mie melambangkan
+      perjalanan hidup yang panjang dan tak terputus, karena itu ada satu pantangan
+      yang dijaga turun-temurun: mie tidak boleh dipotong sebelum maupun saat disantap.
+      Memutusnya dipercaya sama saja memutus harapan akan umur panjang itu sendiri.
+    </p>
+    <p class="zh">
+      在中华文化中，这道面食被称为"长寿面"，寓意绵长不断的人生旅程。
+      因此有一项世代相传的讲究：食用前后都不可将面条切断，
+      否则被认为会折损这份对长寿的祈愿。
+    </p>
+
+    <div class="pull">
+      <span class="zh">长长久久</span>
+      <span class="id">"Panjang, dan panjang selamanya."</span>
+    </div>
+
+    <p class="id">
+      Semangkuk mie panjang umur jarang datang sendirian. Ia biasa ditemani telur —
+      sering diwarnai merah — sebagai simbol kehidupan baru dan awal yang penuh harapan,
+      serta sayuran hijau segar seperti bok choy yang melambangkan kesehatan dan
+      pertumbuhan. Hidangan ini hadir di momen-momen penting: ulang tahun, Tahun Baru
+      Imlek, Cap Go Meh, hingga kumpul keluarga besar — bukan sekadar makanan,
+      melainkan doa yang bisa disantap.
+    </p>
+    <p class="zh">
+      一碗长寿面很少单独出现，常搭配染成红色的鸡蛋，象征新生与希望，
+      以及青翠的时蔬如小白菜，寓意健康与成长。这道菜常见于生日、
+      农历新年、元宵节及家庭团聚等重要时刻——它不只是食物，更是一份可以品尝的祝福。
+    </p>
+
+    <div class="photo-slot" style="aspect-ratio:2/3; max-width:340px; margin-left:auto; margin-right:auto; background:var(--paper-2);">
+      <img src="momen-spesial.jpg" alt="Momen spesial menyantap mie panjang umur dalam budaya Tionghoa" style="object-fit:contain;">
+    </div>
+  </section>
+
+  <!-- ===== BAB 3: MISHOA HARI INI ===== -->
+  <section class="chapter" id="mishoa-hari-ini">
+    <div class="divider">
+      <span class="line"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12c3-4 5 4 8 0s5 4 8 0s4-4 4-4"/></svg>
+      <span class="line"></span>
+    </div>
+
+    <h2>Mishoa Hari Ini</h2>
+    <div class="zh-sub">今日的米索</div>
+
+    <p class="id">
+      Di Mishoa, warisan ini tidak kami simpan hanya untuk hari raya. Kami percaya doa
+      panjang umur dan kebahagiaan itu layak hadir di meja makan sehari-hari — bukan
+      cuma setahun sekali. Setiap mangkuk yang kami siapkan membawa semangat yang sama
+      seperti yang dijaga leluhur: sederhana dibuat, namun penuh makna saat disantap
+      bersama orang-orang terkasih.
+    </p>
+    <p class="zh">
+      在米索，我们不将这份传统只留给节庆时刻。我们相信，
+      对长寿与幸福的祈愿，值得出现在每一天的餐桌上，而不仅仅是一年一度。
+      我们准备的每一碗面，都延续着先人所守护的同一份精神：
+      制作简单，却在与所爱之人共享时，意义深远。
+    </p>
+
+    <!-- Slot foto: ganti src di bawah dengan foto asli produk/proses masak Mishoa -->
+    <div class="photo-slot">
+      <img src="mishoa-story-1.jpg" alt="Proses menyiapkan mie Mishoa" onerror="this.parentElement.style.display='none'">
+    </div>
+
+    <p class="id">
+      Jadi lain kali Bapak/Ibu menyantap semangkuk Mishoa — baik untuk merayakan sesuatu,
+      atau sekadar makan siang biasa — semoga setiap suapan membawa sedikit dari makna
+      itu: panjang umur, sehat selalu, dan hidup yang terus mengalir dengan baik.
+    </p>
+    <p class="zh">
+      所以下次您享用一碗米索时——无论是为了庆祝，还是只是平常的一餐——
+      愿每一口都带着那份寓意：长命百岁，身体健康，生活顺遂绵长。
+    </p>
+  </section>
+
+  <!-- ===== BAB 4: KISAH RASA ===== -->
+  <section class="chapter" id="kisah-rasa">
+    <div class="divider">
+      <span class="line"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12c3-4 5 4 8 0s5 4 8 0s4-4 4-4"/></svg>
+      <span class="line"></span>
+    </div>
+
+    <h2>Kisah di Setiap Rasa</h2>
+    <div class="zh-sub">风味志</div>
+
+    <p class="id">
+      Setiap rasa yang Mishoa hadirkan bukan pilihan sembarangan — masing-masing
+      membawa akar budaya dan ceritanya sendiri.
+    </p>
+    <p class="zh">
+      米索的每一种口味都并非随意选择，各自承载着独特的文化根源与故事。
+    </p>
+
+    <!-- AYAM BAWANG -->
+    <div class="photo-slot" style="margin-top:30px;">
+      <img src="ayam-bawang.jpg" alt="Ayam Bawang Mishoa" onerror="this.parentElement.style.display='none'">
+    </div>
+    <h2 style="font-size:24px; margin-top:6px;">Ayam Bawang</h2>
+    <div class="zh-sub" style="margin-bottom:10px;">葱油鸡面线</div>
+    <p class="id">
+      Berakar dari tradisi Fujian (福建), ayam bawang dikenal sebagai rasa rumah —
+      sederhana, hangat, dan penuh nostalgia. Minyak bawang harum yang berpadu
+      dengan kaldu ringan menjadi simbol kehangatan keluarga.
+    </p>
+    <p class="zh">
+      源自福建家常风味，清汤与葱油结合，象征家的温暖与长寿的祝福。
+    </p>
+
+    <!-- LAKSA -->
+    <div class="photo-slot">
+      <img src="laksa.jpg" alt="Laksa Mishoa" onerror="this.parentElement.style.display='none'">
+    </div>
+    <h2 style="font-size:24px; margin-top:6px;">Laksa</h2>
+    <div class="zh-sub" style="margin-bottom:10px;">叻沙面线</div>
+    <p class="id">
+      Laksa lahir dari budaya Peranakan — perpaduan Tionghoa dan Melayu.
+      Kaya santan, rempah, dan sedikit asam segar, menjadi lambang harmoni
+      dua budaya dalam satu mangkuk.
+    </p>
+    <p class="zh">
+      叻沙源于娘惹文化，融合华人与马来风味，象征文化交融与和谐。
+    </p>
+
+    <!-- MALA -->
+    <div class="photo-slot">
+      <img src="mala.jpg" alt="Mala Mishoa" onerror="this.parentElement.style.display='none'">
+    </div>
+    <h2 style="font-size:24px; margin-top:6px;">Mala</h2>
+    <div class="zh-sub" style="margin-bottom:10px;">麻辣面线</div>
+    <p class="id">
+      Berasal dari Sichuan (四川), Mala dikenal dengan rasa pedas dan sensasi
+      麻辣 (mati rasa + pedas) yang khas. Rasa ini melambangkan keberanian,
+      energi, dan semangat hidup.
+    </p>
+    <p class="zh">
+      麻辣起源四川，以辛辣麻香闻名，象征勇气、热情与生命力。
+    </p>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta">
+    <a class="btn" href="toko.html">🍜 Pesan Mishoa Sekarang</a>
+    <span class="zh-cta">立即订购米索</span>
+  </section>
+
+</main>
+
+<div class="roller" role="presentation"></div>
+
+<script>
+  var chapters = document.querySelectorAll('.chapter');
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold:0.15 });
+  chapters.forEach(function(c){ obs.observe(c); });
+</script>
+
+</body>
+</html>
